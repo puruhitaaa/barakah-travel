@@ -1,0 +1,5 @@
+{
+    "agents": [],
+    "editors": ["vscode"],
+    "guidelines": ["laravel/fortify"]
+}
