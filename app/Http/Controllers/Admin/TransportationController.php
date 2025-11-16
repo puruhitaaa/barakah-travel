@@ -8,14 +8,19 @@ use App\Http\Requests\Transportations\UpdateTransportationRequest;
 use App\Models\Transportation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class TransportationController extends Controller
+class TransportationController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(['auth', 'role:admin']);
+        return [
+            new Middleware('auth'),
+            new Middleware('role:admin'),
+        ];
     }
 
     public function index(Request $request): Response
