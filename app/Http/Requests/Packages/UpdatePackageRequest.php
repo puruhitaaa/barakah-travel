@@ -22,7 +22,7 @@ class UpdatePackageRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'type' => ['sometimes', 'required', 'in:hajj,umrah'],
             'duration_days' => ['sometimes', 'required', 'integer', 'min:1', 'max:365'],
-            'price' => ['sometimes', 'required', 'numeric', 'min:0'],
+            'price' => ['sometimes', 'required', 'numeric', 'min:0', 'max:99999999.99'],
             'departure_date' => ['sometimes', 'required', 'date'],
             'return_date' => ['sometimes', 'required', 'date', 'after_or_equal:departure_date'],
             'available_slots' => ['sometimes', 'required', 'integer', 'min:0'],

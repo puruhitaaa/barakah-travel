@@ -22,7 +22,7 @@ class StorePackageRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'type' => ['required', 'in:hajj,umrah'],
             'duration_days' => ['required', 'integer', 'min:1', 'max:365'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'departure_date' => ['required', 'date'],
             'return_date' => ['required', 'date', 'after_or_equal:departure_date'],
             'available_slots' => ['required', 'integer', 'min:0'],

@@ -46,6 +46,7 @@ interface AdminDataTableProps<T extends Record<string, unknown>> {
     pagination: Pagination;
     buildUrl: (params: Record<string, unknown>) => string;
     onDelete?: (row: T) => void;
+    renderActions?: (row: T) => ReactNode;
 }
 
 export default function AdminDataTable<T extends Record<string, unknown>>({
@@ -56,6 +57,7 @@ export default function AdminDataTable<T extends Record<string, unknown>>({
     pagination,
     buildUrl,
     onDelete,
+    renderActions,
 }: AdminDataTableProps<T>) {
     const [q, setQ] = useState<string>(String(filters.q ?? ''));
     const [perPage, setPerPage] = useState<number>(
@@ -163,7 +165,7 @@ export default function AdminDataTable<T extends Record<string, unknown>>({
                                     </button>
                                 </th>
                             ))}
-                            {onDelete && (
+                            {(renderActions || onDelete) && (
                                 <th className="px-3 py-2 text-right">
                                     Actions
                                 </th>
@@ -193,16 +195,20 @@ export default function AdminDataTable<T extends Record<string, unknown>>({
                                               )}
                                     </td>
                                 ))}
-                                {onDelete && (
+                                {(renderActions || onDelete) && (
                                     <td className="px-3 py-2 text-right">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => onDelete(row)}
-                                        >
-                                            <Trash2 className="size-4" />
-                                            Delete
-                                        </Button>
+                                        {renderActions ? (
+                                            renderActions(row)
+                                        ) : (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => onDelete?.(row)}
+                                            >
+                                                <Trash2 className="size-4" />
+                                                Delete
+                                            </Button>
+                                        )}
                                     </td>
                                 )}
                             </tr>

@@ -102,10 +102,27 @@ it('accepts package boundary values', function () {
     expect($validator->fails())->toBeFalse();
 });
 
+it('accepts max price boundary', function () {
+    $d = now()->toDateString();
+    $payload = [
+        'name' => 'Pkg',
+        'type' => 'hajj',
+        'duration_days' => 10,
+        'price' => 99999999.99,
+        'departure_date' => $d,
+        'return_date' => $d,
+        'available_slots' => 10,
+    ];
+
+    $validator = Validator::make($payload, (new StorePackageRequest)->rules());
+    expect($validator->fails())->toBeFalse();
+});
+
 dataset('packageInvalidEdges', [
     ['duration_days', 0],
     ['duration_days', 366],
     ['price', -1],
+    ['price', 100000000],
     ['available_slots', -5],
 ]);
 
