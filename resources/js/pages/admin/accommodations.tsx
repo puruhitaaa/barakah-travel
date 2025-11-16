@@ -3,6 +3,30 @@ import AppLayout from '@/layouts/app-layout';
 import accommodations from '@/routes/admin/accommodations';
 import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
+import InputError from '@/components/input-error';
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useMemo, useState } from 'react';
+import { z } from 'zod';
 
 type AccommodationRow = {
     id: number;
@@ -10,6 +34,7 @@ type AccommodationRow = {
     type: string;
     rating: number;
     location: string;
+    description?: string;
     created_at: string;
 };
 
@@ -32,6 +57,212 @@ export default function AccommodationsPage() {
         }
     >().props;
 
+    const [createOpen, setCreateOpen] = useState(false);
+
+    const schema = useMemo(
+        () =>
+            z.object({
+                name: z.string().min(1).max(255),
+                type: z.string().min(1).max(255),
+                location: z.string().max(255).optional(),
+                rating: z.preprocess((v) => Number(v), z.number().min(0).max(5)),
+                description: z.string().optional(),
+            }),
+        [],
+    );
+
+    type FormValues = z.infer<typeof schema>;
+
+    function AccommodationForm({
+        initial,
+        onSubmit,
+        submitting,
+    }: {
+        initial?: Partial<FormValues>;
+        onSubmit: (values: FormValues) => void;
+        submitting: boolean;
+    }) {
+        const [values, setValues] = useState<FormValues>({
+            name: initial?.name ?? '',
+            type: initial?.type ?? '',
+            location: initial?.location ?? '',
+            rating: Number(initial?.rating ?? 0),
+            description: initial?.description ?? '',
+        });
+
+        const [errors, setErrors] = useState<
+            Partial<Record<keyof FormValues, string>>
+        >({});
+
+        const submit = () => {
+            const parsed = schema.safeParse(values);
+            if (!parsed.success) {
+                const fieldErrors: Partial<Record<keyof FormValues, string>> = {};
+                parsed.error.issues.forEach((issue) => {
+                    const key = issue.path[0] as keyof FormValues;
+                    fieldErrors[key] = issue.message;
+                });
+                setErrors(fieldErrors);
+                return;
+            }
+            setErrors({});
+            onSubmit(parsed.data);
+        };
+
+        return (
+            <form
+                className="space-y-4"
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    submit();
+                }}
+            >
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                        <Label htmlFor="name">Name</Label>
+                        <Input
+                            id="name"
+                            value={values.name}
+                            onChange={(e) =>
+                                setValues({ ...values, name: e.target.value })
+                            }
+                        />
+                        <InputError message={errors.name} />
+                    </div>
+                    <div>
+                        <Label htmlFor="type">Type</Label>
+                        <Input
+                            id="type"
+                            value={values.type}
+                            onChange={(e) =>
+                                setValues({ ...values, type: e.target.value })
+                            }
+                        />
+                        <InputError message={errors.type} />
+                    </div>
+                    <div>
+                        <Label htmlFor="location">Location</Label>
+                        <Input
+                            id="location"
+                            value={values.location ?? ''}
+                            onChange={(e) =>
+                                setValues({
+                                    ...values,
+                                    location: e.target.value,
+                                })
+                            }
+                        />
+                        <InputError message={errors.location} />
+                    </div>
+                    <div>
+                        <Label htmlFor="rating">Rating</Label>
+                        <Input
+                            id="rating"
+                            type="number"
+                            min={0}
+                            max={5}
+                            step="0.1"
+                            value={values.rating}
+                            onChange={(e) =>
+                                setValues({
+                                    ...values,
+                                    rating: Number(e.target.value),
+                                })
+                            }
+                        />
+                        <InputError message={errors.rating} />
+                    </div>
+                </div>
+                <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Input
+                        id="description"
+                        value={values.description ?? ''}
+                        onChange={(e) =>
+                            setValues({
+                                ...values,
+                                description: e.target.value,
+                            })
+                        }
+                    />
+                    <InputError message={errors.description} />
+                </div>
+                <DialogFooter>
+                    <Button type="submit" disabled={submitting}>
+                        Save
+                    </Button>
+                </DialogFooter>
+            </form>
+        );
+    }
+
+    function RowActions({ row }: { row: AccommodationRow }) {
+        const [open, setOpen] = useState(false);
+        const [submitting, setSubmitting] = useState(false);
+        return (
+            <div className="flex items-center justify-end gap-2">
+                <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                            Edit
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Edit Accommodation</DialogTitle>
+                        </DialogHeader>
+                        <AccommodationForm
+                            initial={{
+                                name: row.name,
+                                type: row.type,
+                                location: row.location,
+                                rating: row.rating,
+                                description: row.description,
+                            }}
+                            submitting={submitting}
+                            onSubmit={(values) => {
+                                setSubmitting(true);
+                                router.put(
+                                    accommodations.update.url(row.id),
+                                    values,
+                                    {
+                                        preserveScroll: true,
+                                        onFinish: () => setSubmitting(false),
+                                        onSuccess: () => setOpen(false),
+                                    },
+                                );
+                            }}
+                        />
+                    </DialogContent>
+                </Dialog>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                            Delete
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete accommodation?</AlertDialogTitle>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() =>
+                                    router.delete(
+                                        accommodations.destroy.url(row.id),
+                                    )
+                                }
+                            >
+                                Delete
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        );
+    }
+
     return (
         <AppLayout
             breadcrumbs={[
@@ -50,10 +281,30 @@ export default function AccommodationsPage() {
                             Manage accommodations
                         </p>
                     </div>
-                    {/* <Button onClick={() => setCreateDialogOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Accommodation
-                </Button> */}
+                    <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                        <DialogTrigger asChild>
+                            <Button>Create Accommodation</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Create Accommodation</DialogTitle>
+                            </DialogHeader>
+                            <AccommodationForm
+                                submitting={false}
+                                onSubmit={(values) =>
+                                    router.post(
+                                        accommodations.store.url(),
+                                        values,
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: () => setCreateOpen(false),
+                                            onError: () => {},
+                                        },
+                                    )
+                                }
+                            />
+                        </DialogContent>
+                    </Dialog>
                 </div>
                 <AdminDataTable<AccommodationRow>
                     headers={[
@@ -75,9 +326,7 @@ export default function AccommodationsPage() {
                         to: items.to,
                     }}
                     buildUrl={(options) => accommodations.index.url(options)}
-                    onDelete={(row) =>
-                        router.delete(accommodations.destroy.url(row.id))
-                    }
+                    renderActions={(row) => <RowActions row={row} />}
                 />
             </div>
         </AppLayout>
