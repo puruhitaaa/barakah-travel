@@ -38,4 +38,63 @@ class LandingController extends Controller
             'packages' => $packages,
         ]);
     }
+
+    public function packages(Request $request): Response
+    {
+        $perPage = 6;
+
+        // Get all packages with booking counts
+        $allPackages = Package::withCount('bookings')
+            ->orderByDesc('bookings_count')
+            ->get()
+            ->map(function ($package) {
+                // Determine group size based on type
+                $groupSizes = [
+                    'hajj' => '30-50 Pilgrims',
+                    'umrah' => '10-30 Pilgrims',
+                ];
+
+                // Generate features based on package type
+                $features = $package->type === 'hajj'
+                    ? [
+                        'Complete Hajj rituals guidance',
+                        'Dedicated support team',
+                        'All meals & special provisions',
+                    ]
+                    : [
+                        'Hotel accommodation',
+                        'Guided Umrah tours',
+                        'All meals included',
+                    ];
+
+                return [
+                    'id' => $package->id,
+                    'name' => $package->name,
+                    'type' => $package->type,
+                    'duration_days' => $package->duration_days,
+                    'duration' => $package->duration_days . ' Days',
+                    'price' => '$' . number_format($package->price),
+                    'description' => $package->description,
+                    'group' => $groupSizes[$package->type] ?? '10-30 Pilgrims',
+                    'departure' => 'As scheduled',
+                    'booking_count' => $package->bookings_count,
+                    'featured' => $package->is_featured,
+                    'features' => $features,
+                    'highlights' => $package->is_featured ? ['Most popular'] : [],
+                ];
+            });
+
+        $totalPackages = $allPackages->count();
+        $currentPage = (int) ($request->query('page') ?? 1);
+        $packages = $allPackages->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $totalPages = (int) ceil($totalPackages / $perPage);
+
+        return Inertia::render('packages/index', [
+            'packages' => $packages,
+            'totalPackages' => $totalPackages,
+            'currentPage' => $currentPage,
+            'perPage' => $perPage,
+            'totalPages' => $totalPages,
+        ]);
+    }
 }

@@ -1,4 +1,4 @@
-export function PackagePageHero() {
+export function PackagePageHero({ totalPackages }: { totalPackages: number }) {
     return (
         <section className="bg-gradient-to-b from-primary/10 to-background px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
             <div className="mx-auto max-w-4xl space-y-6 text-center">
@@ -13,7 +13,9 @@ export function PackagePageHero() {
                 </p>
                 <div className="flex flex-wrap justify-center gap-4 pt-4">
                     <div className="text-center">
-                        <p className="text-3xl font-bold text-primary">50+</p>
+                        <p className="text-3xl font-bold text-primary">
+                            {totalPackages}+
+                        </p>
                         <p className="text-sm text-foreground/60">
                             Packages Available
                         </p>

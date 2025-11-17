@@ -6,155 +6,63 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { CheckCircle2, Clock, MapPin, Users } from 'lucide-react';
+import { useDraggableScroll } from '@/hooks/useDraggableScroll';
+import { Link } from '@inertiajs/react';
+import {
+    CheckCircle2,
+    ChevronLeft,
+    ChevronRight,
+    Clock,
+    MapPin,
+    Users,
+} from 'lucide-react';
+import { useEffect } from 'react';
 
-export function PackagesList() {
-    const packages = [
-        {
-            id: 1,
-            name: 'Umrah Lite',
-            duration: '7 Days',
-            price: '$1,299',
-            group: '10-20 Pilgrims',
-            departure: 'Monthly',
-            description:
-                'Perfect for first-time pilgrims seeking an affordable and guided Umrah experience.',
-            featured: false,
-            features: [
-                '3-star hotel in Makkah & Medina',
-                'Guided Umrah tours',
-                'All meals included',
-                'Airport transfers',
-                'Group prayers',
-                'Basic support team',
-            ],
-            highlights: [
-                'Budget-friendly',
-                'Small groups',
-                'Essential services',
-            ],
-        },
-        {
-            id: 2,
-            name: 'Umrah Premium',
-            duration: '10 Days',
-            price: '$2,499',
-            group: '20-30 Pilgrims',
-            departure: 'Bi-weekly',
-            description:
-                'Our most popular choice with enhanced comfort and personalized guidance.',
-            featured: true,
-            features: [
-                '4-star hotel accommodations',
-                'Personal guides for groups',
-                'Premium meals & dining',
-                'VIP transportation',
-                'Evening educational programs',
-                'Shopping and leisure tours',
-                '24/7 support hotline',
-            ],
-            highlights: ['Most popular', 'Enhanced comfort', 'VIP service'],
-        },
-        {
-            id: 3,
-            name: 'Umrah Plus',
-            duration: '12 Days',
-            price: '$3,299',
-            group: '15-25 Pilgrims',
-            departure: 'Weekly',
-            description:
-                'Extended Umrah with optional holy sites visits and cultural experiences.',
-            featured: false,
-            features: [
-                '4-star premium hotels',
-                'Experienced spiritual guides',
-                'Gourmet meal experiences',
-                'Luxury coach transportation',
-                'Extended programs & lectures',
-                'Holy sites (optional extras)',
-                'Personal assistant service',
-            ],
-            highlights: [
-                'Extended duration',
-                'Spiritual focus',
-                'Personal service',
-            ],
-        },
-        {
-            id: 4,
-            name: 'Hajj Experience',
-            duration: '14 Days',
-            price: '$3,999',
-            group: '30-50 Pilgrims',
-            departure: 'Annual (Dhul-Hijjah)',
-            description:
-                'Complete Hajj pilgrimage with full rituals and comprehensive support throughout.',
-            featured: false,
-            features: [
-                '5-star hotel accommodations',
-                'Complete Hajj rituals guidance',
-                'Dedicated support team',
-                'All meals & special provisions',
-                'Ihram provision & clothing',
-                'Post-Hajj Umrah included',
-                'Medical & emergency support',
-            ],
-            highlights: ['Full Hajj', 'Luxury comfort', 'Dedicated team'],
-        },
-        {
-            id: 5,
-            name: 'Hajj Deluxe',
-            duration: '16 Days',
-            price: '$4,999',
-            group: '20-25 Pilgrims',
-            departure: 'Annual (Dhul-Hijjah)',
-            description:
-                'Ultimate Hajj experience with luxury accommodations and personalized attention.',
-            featured: false,
-            features: [
-                '5-star luxury hotels',
-                'Private guides for each group',
-                'Michelin-inspired cuisine',
-                'Private transportation fleet',
-                'Daily seminars & lectures',
-                'Extended Umrah programs',
-                'Concierge services',
-                'Travel insurance included',
-            ],
-            highlights: [
-                'Ultra-luxury',
-                'Private guides',
-                'Concierge included',
-            ],
-        },
-        {
-            id: 6,
-            name: 'Corporate Hajj',
-            duration: '15 Days',
-            price: 'Custom Quote',
-            group: 'Flexible Groups',
-            departure: 'Custom Dates',
-            description:
-                'Tailored Hajj packages for organizations and corporate groups.',
-            featured: false,
-            features: [
-                'Customizable duration',
-                'Dedicated group leaders',
-                'Corporate meal arrangements',
-                'Fleet coordination',
-                'Daily briefings',
-                'Post-pilgrimage events',
-                'Group photo services',
-                'Customized itineraries',
-            ],
-            highlights: [
-                'Fully customizable',
-                'Group rates',
-                'Dedicated leadership',
-            ],
-        },
-    ];
+type Package = {
+    id: number;
+    name: string;
+    type: string;
+    duration_days: number;
+    duration: string;
+    price: string | number;
+    description?: string;
+    featured: boolean;
+    booking_count: number;
+    departure_date?: string;
+    available_slots?: number;
+    group: string;
+    departure: string;
+    features: string[];
+    highlights: string[];
+};
 
+export function PackagesList({
+    packages,
+    currentPage,
+    totalPages,
+}: {
+    packages: Package[];
+    currentPage?: number;
+    totalPages?: number;
+}) {
+    const paginationScrollRef = useDraggableScroll();
+
+    useEffect(() => {
+        if (!paginationScrollRef.current || !currentPage) return;
+
+        const container = paginationScrollRef.current;
+        const activeButton = container.querySelector(
+            `a[href="?page=${currentPage}"]`,
+        );
+
+        if (activeButton) {
+            activeButton.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+                inline: 'center',
+            });
+        }
+    }, [currentPage, paginationScrollRef]);
     return (
         <section className="bg-background px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
             <div className="mx-auto max-w-7xl">
@@ -167,6 +75,72 @@ export function PackagesList() {
                         Browse and compare all our carefully designed packages
                     </p>
                 </div>
+
+                {/* Pagination */}
+                {totalPages && totalPages > 1 && (
+                    <div className="mb-12 flex items-center justify-center gap-4">
+                        <Link
+                            href={
+                                currentPage && currentPage > 1
+                                    ? `?page=${currentPage - 1}`
+                                    : '#'
+                            }
+                            preserveScroll
+                        >
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={!currentPage || currentPage === 1}
+                            >
+                                <ChevronLeft size={16} className="mr-1" />
+                                Previous
+                            </Button>
+                        </Link>
+
+                        <div
+                            ref={paginationScrollRef}
+                            className="scrollbar-hide flex max-w-xs items-center gap-1 overflow-x-auto"
+                        >
+                            {Array.from(
+                                { length: totalPages },
+                                (_, i) => i + 1,
+                            ).map((page) => (
+                                <Link
+                                    key={page}
+                                    href={`?page=${page}`}
+                                    preserveScroll
+                                    className={`flex-shrink-0 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                                        currentPage === page
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'hover:bg-muted'
+                                    }`}
+                                >
+                                    {page}
+                                </Link>
+                            ))}
+                        </div>
+
+                        <Link
+                            href={
+                                currentPage && currentPage < totalPages
+                                    ? `?page=${currentPage + 1}`
+                                    : '#'
+                            }
+                            preserveScroll
+                        >
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={
+                                    !currentPage || currentPage === totalPages
+                                }
+                            >
+                                Next
+                                <ChevronRight size={16} className="ml-1" />
+                            </Button>
+                        </Link>
+                    </div>
+                )}
 
                 {/* Packages Grid */}
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

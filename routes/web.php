@@ -18,6 +18,7 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
+Route::get('/packages', [LandingController::class, 'packages'])->name('packages');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {

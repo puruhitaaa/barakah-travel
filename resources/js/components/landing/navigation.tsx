@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { home } from '@/routes';
+import { home, packages } from '@/routes';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -10,7 +10,7 @@ export function Navigation() {
 
     const navItems = [
         { label: 'Home', href: home.url() },
-        { label: 'Packages', href: '#packages' },
+        { label: 'Packages', href: packages.url() },
         { label: 'Features', href: '#features' },
         { label: 'Contact', href: '#contact' },
     ];
