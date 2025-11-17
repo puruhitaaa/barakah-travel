@@ -1,17 +1,5 @@
 import AdminDataTable from '@/components/admin/data-table';
-import AppLayout from '@/layouts/app-layout';
-import transportations from '@/routes/admin/transportations';
-import { type SharedData } from '@/types';
-import { Head, router, usePage } from '@inertiajs/react';
 import InputError from '@/components/input-error';
-import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -23,8 +11,27 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import AppLayout from '@/layouts/app-layout';
+import transportations from '@/routes/admin/transportations';
+import { type SharedData } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { z } from 'zod';
 
@@ -40,7 +47,7 @@ type TransportationRow = {
 type Sort = { by: string; direction: 'asc' | 'desc' };
 
 export default function TransportationsPage() {
-    const { items, filters, sort } = usePage<
+    const { items, filters, sort, transportationTypes } = usePage<
         SharedData & {
             items: {
                 data: TransportationRow[];
@@ -53,6 +60,7 @@ export default function TransportationsPage() {
             };
             filters: Record<string, unknown>;
             sort: Sort;
+            transportationTypes: Array<{ value: string; label: string }>;
         }
     >().props;
 
@@ -61,7 +69,13 @@ export default function TransportationsPage() {
     const schema = useMemo(
         () =>
             z.object({
-                type: z.string().min(1).max(255),
+                type: z
+                    .enum(['bus', 'flight', 'train', 'van'])
+                    .refine(
+                        (val) =>
+                            ['bus', 'flight', 'train', 'van'].includes(val),
+                        'Type must be bus, flight, train, or van',
+                    ),
                 company: z.string().max(255).optional(),
                 capacity: z.preprocess(
                     (v) =>
@@ -87,7 +101,9 @@ export default function TransportationsPage() {
         submitting: boolean;
     }) {
         const [values, setValues] = useState<FormValues>({
-            type: initial?.type ?? '',
+            type:
+                (initial?.type as 'bus' | 'flight' | 'train' | 'van') ??
+                ('bus' as const),
             company: initial?.company ?? '',
             capacity: initial?.capacity ?? undefined,
             description: initial?.description ?? '',
@@ -100,7 +116,8 @@ export default function TransportationsPage() {
         const submit = () => {
             const parsed = schema.safeParse(values);
             if (!parsed.success) {
-                const fieldErrors: Partial<Record<keyof FormValues, string>> = {};
+                const fieldErrors: Partial<Record<keyof FormValues, string>> =
+                    {};
                 parsed.error.issues.forEach((issue) => {
                     const key = issue.path[0] as keyof FormValues;
                     fieldErrors[key] = issue.message;
@@ -123,13 +140,33 @@ export default function TransportationsPage() {
                 <div className="grid gap-3 sm:grid-cols-2">
                     <div>
                         <Label htmlFor="type">Type</Label>
-                        <Input
-                            id="type"
+                        <Select
                             value={values.type}
-                            onChange={(e) =>
-                                setValues({ ...values, type: e.target.value })
+                            onValueChange={(value) =>
+                                setValues({
+                                    ...values,
+                                    type: value as
+                                        | 'bus'
+                                        | 'flight'
+                                        | 'train'
+                                        | 'van',
+                                })
                             }
-                        />
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {transportationTypes.map((type) => (
+                                    <SelectItem
+                                        key={type.value}
+                                        value={type.value}
+                                    >
+                                        {type.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <InputError message={errors.type} />
                     </div>
                     <div>
@@ -206,7 +243,12 @@ export default function TransportationsPage() {
                         </DialogHeader>
                         <TransportationForm
                             initial={{
-                                type: row.type,
+                                type:
+                                    (row.type as
+                                        | 'bus'
+                                        | 'flight'
+                                        | 'train'
+                                        | 'van') ?? ('bus' as const),
                                 company: row.company,
                                 capacity: row.capacity,
                                 description: row.description,
@@ -235,7 +277,9 @@ export default function TransportationsPage() {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Delete transportation?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                                Delete transportation?
+                            </AlertDialogTitle>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -289,7 +333,8 @@ export default function TransportationsPage() {
                                         values,
                                         {
                                             preserveScroll: true,
-                                            onSuccess: () => setCreateOpen(false),
+                                            onSuccess: () =>
+                                                setCreateOpen(false),
                                             onError: () => {},
                                         },
                                     )

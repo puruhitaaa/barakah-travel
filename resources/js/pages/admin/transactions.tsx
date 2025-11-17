@@ -81,7 +81,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function TransactionsPage() {
-    const { items, filters, sort } = usePage<
+    const { items, filters, sort, bookings, paymentGateways } = usePage<
         SharedData & {
             items: {
                 data: TransactionRow[];
@@ -94,6 +94,8 @@ export default function TransactionsPage() {
             };
             filters: Record<string, unknown>;
             sort: Sort;
+            bookings: Array<{ id: number; booking_reference: string }>;
+            paymentGateways: Array<{ id: number; name: string }>;
         }
     >().props;
 
@@ -204,19 +206,30 @@ export default function TransactionsPage() {
                         <InputError message={errors.status} />
                     </div>
                     <div>
-                        <Label htmlFor="booking_id">Booking ID</Label>
-                        <Input
-                            id="booking_id"
-                            type="number"
-                            min="1"
-                            value={values.booking_id || ''}
-                            onChange={(e) =>
+                        <Label htmlFor="booking_id">Booking</Label>
+                        <Select
+                            value={values.booking_id?.toString() ?? ''}
+                            onValueChange={(value) =>
                                 setValues({
                                     ...values,
-                                    booking_id: Number(e.target.value),
+                                    booking_id: value ? Number(value) : 0,
                                 })
                             }
-                        />
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select booking" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {bookings.map((booking) => (
+                                    <SelectItem
+                                        key={booking.id}
+                                        value={booking.id.toString()}
+                                    >
+                                        {booking.booking_reference}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <InputError message={errors.booking_id} />
                     </div>
                 </div>
@@ -236,18 +249,39 @@ export default function TransactionsPage() {
                         <InputError message={errors.payment_method} />
                     </div>
                     <div>
-                        <Label htmlFor="gateway_type">Gateway Type</Label>
-                        <Input
-                            id="gateway_type"
-                            value={values.gateway_type ?? ''}
-                            onChange={(e) =>
+                        <Label htmlFor="gateway_id">Payment Gateway</Label>
+                        <Select
+                            value={values.gateway_id?.toString() ?? 'none'}
+                            onValueChange={(value) =>
                                 setValues({
                                     ...values,
-                                    gateway_type: e.target.value,
+                                    gateway_id:
+                                        value === 'none'
+                                            ? undefined
+                                            : Number(value),
+                                    gateway_type:
+                                        value === 'none'
+                                            ? ''
+                                            : 'App\\Models\\PaymentGateway',
                                 })
                             }
-                        />
-                        <InputError message={errors.gateway_type} />
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select gateway (optional)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">None</SelectItem>
+                                {paymentGateways.map((gateway) => (
+                                    <SelectItem
+                                        key={gateway.id}
+                                        value={gateway.id.toString()}
+                                    >
+                                        {gateway.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <InputError message={errors.gateway_id} />
                     </div>
                 </div>
                 <DialogFooter>

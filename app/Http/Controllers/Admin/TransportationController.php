@@ -72,6 +72,12 @@ class TransportationController extends Controller implements HasMiddleware
                 'by' => $sort,
                 'direction' => $direction,
             ],
+            'transportationTypes' => [
+                ['value' => 'bus', 'label' => 'Bus'],
+                ['value' => 'flight', 'label' => 'Flight'],
+                ['value' => 'train', 'label' => 'Train'],
+                ['value' => 'van', 'label' => 'Van'],
+            ],
         ]);
     }
 

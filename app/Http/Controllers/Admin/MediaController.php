@@ -68,19 +68,36 @@ class MediaController extends Controller implements HasMiddleware
                 'by' => $sort,
                 'direction' => $direction,
             ],
+            'mediableTypes' => [
+                ['value' => 'App\\Models\\Package', 'label' => 'Package'],
+                ['value' => 'App\\Models\\Accommodation', 'label' => 'Accommodation'],
+                ['value' => 'App\\Models\\Transportation', 'label' => 'Transportation'],
+            ],
         ]);
     }
 
     public function store(StoreMediaRequest $request): RedirectResponse
     {
-        Media::create($request->validated());
+        $validated = $request->validated();
+        $validated['disk'] = $validated['disk'] ?? 'public';
+        $validated['mime_type'] = mime_content_type($validated['path']) ?? null;
+        $validated['size'] = filesize($validated['path']) ?: null;
+
+        Media::create($validated);
 
         return redirect()->route('admin.media.index')->with('success', 'Media created');
     }
 
     public function update(UpdateMediaRequest $request, Media $media): RedirectResponse
     {
-        $media->update($request->validated());
+        $validated = $request->validated();
+
+        if (isset($validated['path'])) {
+            $validated['mime_type'] = mime_content_type($validated['path']) ?? null;
+            $validated['size'] = filesize($validated['path']) ?: null;
+        }
+
+        $media->update($validated);
 
         return redirect()->route('admin.media.index')->with('success', 'Media updated');
     }

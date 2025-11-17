@@ -77,7 +77,28 @@ class PackageController extends Controller implements HasMiddleware
     public function store(StorePackageRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        Package::create($data);
+        $package = Package::create($data);
+
+        // Handle media uploads
+        if ($request->has('media')) {
+            $mediaItems = $request->input('media', []);
+            foreach ($mediaItems as $mediaItem) {
+                if (isset($mediaItem['file'])) {
+                    $file = $mediaItem['file'];
+                    $path = $file->store('media/packages', 'public');
+
+                    $package->media()->create([
+                        'type' => $mediaItem['type'] ?? 'image',
+                        'disk' => 'public',
+                        'path' => $path,
+                        'mime_type' => $file->getMimeType(),
+                        'size' => $file->getSize(),
+                        'alt_text' => $mediaItem['alt_text'] ?? null,
+                        'ordering' => 0,
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('admin.packages.index')->with('success', 'Package created');
     }

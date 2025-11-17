@@ -60,20 +60,7 @@ const schema = z.object({
             (val) => ['image', 'video'].includes(val),
             'Type must be image or video',
         ),
-    disk: z.string().max(255, 'Disk must not exceed 255 characters').optional(),
-    path: z
-        .string()
-        .min(1, 'Path is required')
-        .max(255, 'Path must not exceed 255 characters'),
-    mime_type: z
-        .string()
-        .max(255, 'MIME type must not exceed 255 characters')
-        .optional(),
-    size: z.coerce
-        .number()
-        .int()
-        .nonnegative('Size must be non-negative')
-        .optional(),
+    path: z.string().max(255, 'Path must not exceed 255 characters').optional(),
     alt_text: z
         .string()
         .max(255, 'Alt text must not exceed 255 characters')
@@ -88,7 +75,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function MediaPage() {
-    const { items, filters, sort } = usePage<
+    const { items, filters, sort, mediableTypes } = usePage<
         SharedData & {
             items: {
                 data: MediaRow[];
@@ -101,6 +88,7 @@ export default function MediaPage() {
             };
             filters: Record<string, unknown>;
             sort: Sort;
+            mediableTypes: Array<{ value: string; label: string }>;
         }
     >().props;
 
@@ -117,10 +105,7 @@ export default function MediaPage() {
             mediable_type: initial?.mediable_type ?? '',
             mediable_id: initial?.mediable_id ?? 0,
             type: initial?.type ?? 'image',
-            disk: initial?.disk ?? '',
             path: initial?.path ?? '',
-            mime_type: initial?.mime_type ?? '',
-            size: initial?.size ?? undefined,
             alt_text: initial?.alt_text ?? '',
             ordering: initial?.ordering ?? 0,
         });
@@ -155,21 +140,37 @@ export default function MediaPage() {
             >
                 <div className="grid gap-3 sm:grid-cols-2">
                     <div>
-                        <Label htmlFor="mediable_type">Mediable Type</Label>
-                        <Input
-                            id="mediable_type"
+                        <Label htmlFor="mediable_type">
+                            Attached To (Model)
+                        </Label>
+                        <Select
                             value={values.mediable_type}
-                            onChange={(e) =>
+                            onValueChange={(value) =>
                                 setValues({
                                     ...values,
-                                    mediable_type: e.target.value,
+                                    mediable_type: value,
+                                    mediable_id: 0, // Reset ID when type changes
                                 })
                             }
-                        />
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select model type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {mediableTypes.map((type) => (
+                                    <SelectItem
+                                        key={type.value}
+                                        value={type.value}
+                                    >
+                                        {type.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <InputError message={errors.mediable_type} />
                     </div>
                     <div>
-                        <Label htmlFor="mediable_id">Mediable ID</Label>
+                        <Label htmlFor="mediable_id">Record ID</Label>
                         <Input
                             id="mediable_id"
                             type="number"
@@ -182,6 +183,15 @@ export default function MediaPage() {
                                 })
                             }
                         />
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Enter the ID of the selected{' '}
+                            {values.mediable_type
+                                ? mediableTypes.find(
+                                      (t) => t.value === values.mediable_type,
+                                  )?.label
+                                : 'model'}{' '}
+                            record
+                        </p>
                         <InputError message={errors.mediable_id} />
                     </div>
                     <div>
@@ -209,7 +219,7 @@ export default function MediaPage() {
                         <Label htmlFor="path">Path</Label>
                         <Input
                             id="path"
-                            value={values.path}
+                            value={values.path ?? ''}
                             onChange={(e) =>
                                 setValues({
                                     ...values,
@@ -217,55 +227,27 @@ export default function MediaPage() {
                                 })
                             }
                         />
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Optional - leave blank if managing file via upload
+                            elsewhere
+                        </p>
                         <InputError message={errors.path} />
                     </div>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                     <div>
-                        <Label htmlFor="disk">Disk</Label>
+                        <Label htmlFor="alt_text">Alt Text</Label>
                         <Input
-                            id="disk"
-                            value={values.disk ?? ''}
+                            id="alt_text"
+                            value={values.alt_text ?? ''}
                             onChange={(e) =>
                                 setValues({
                                     ...values,
-                                    disk: e.target.value,
+                                    alt_text: e.target.value,
                                 })
                             }
                         />
-                        <InputError message={errors.disk} />
-                    </div>
-                    <div>
-                        <Label htmlFor="mime_type">MIME Type</Label>
-                        <Input
-                            id="mime_type"
-                            value={values.mime_type ?? ''}
-                            onChange={(e) =>
-                                setValues({
-                                    ...values,
-                                    mime_type: e.target.value,
-                                })
-                            }
-                        />
-                        <InputError message={errors.mime_type} />
-                    </div>
-                    <div>
-                        <Label htmlFor="size">Size (bytes)</Label>
-                        <Input
-                            id="size"
-                            type="number"
-                            min="0"
-                            value={values.size ?? ''}
-                            onChange={(e) =>
-                                setValues({
-                                    ...values,
-                                    size: e.target.value
-                                        ? Number(e.target.value)
-                                        : undefined,
-                                })
-                            }
-                        />
-                        <InputError message={errors.size} />
+                        <InputError message={errors.alt_text} />
                     </div>
                     <div>
                         <Label htmlFor="ordering">Ordering</Label>
@@ -283,20 +265,6 @@ export default function MediaPage() {
                         />
                         <InputError message={errors.ordering} />
                     </div>
-                </div>
-                <div>
-                    <Label htmlFor="alt_text">Alt Text</Label>
-                    <Input
-                        id="alt_text"
-                        value={values.alt_text ?? ''}
-                        onChange={(e) =>
-                            setValues({
-                                ...values,
-                                alt_text: e.target.value,
-                            })
-                        }
-                    />
-                    <InputError message={errors.alt_text} />
                 </div>
                 <DialogFooter>
                     <Button type="submit" disabled={submitting}>
@@ -327,7 +295,6 @@ export default function MediaPage() {
                                 mediable_type: row.mediable_type,
                                 type: row.type as 'image' | 'video',
                                 path: row.path,
-                                mime_type: row.mime_type,
                                 ordering: row.ordering,
                             }}
                             submitting={submitting}

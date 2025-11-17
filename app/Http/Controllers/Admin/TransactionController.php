@@ -71,6 +71,8 @@ class TransactionController extends Controller implements HasMiddleware
                 'by' => $sort,
                 'direction' => $direction,
             ],
+            'bookings' => \App\Models\Booking::select('id', 'booking_reference')->orderBy('booking_reference')->get(),
+            'paymentGateways' => \App\Models\PaymentGateway::select('id', 'name')->where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 

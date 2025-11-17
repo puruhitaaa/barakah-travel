@@ -1,5 +1,6 @@
 import AdminDataTable from '@/components/admin/data-table';
 import InputError from '@/components/input-error';
+import MediaUpload from '@/components/media-upload';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -111,13 +112,21 @@ export default function PackagesPage() {
 
     type FormValues = z.infer<typeof schema>;
 
+    interface MediaFile {
+        id: string;
+        file: File;
+        type: 'image' | 'video';
+        preview?: string;
+        altText?: string;
+    }
+
     function PackageForm({
         initial,
         onSubmit,
         submitting,
     }: {
         initial?: Partial<FormValues>;
-        onSubmit: (values: FormValues) => void;
+        onSubmit: (values: FormValues, media?: MediaFile[]) => void;
         submitting: boolean;
     }) {
         const [values, setValues] = useState<FormValues>({
@@ -132,6 +141,7 @@ export default function PackagesPage() {
             is_featured: Boolean(initial?.is_featured ?? false),
         });
 
+        const [selectedMedia, setSelectedMedia] = useState<MediaFile[]>([]);
         const [errors, setErrors] = useState<
             Partial<Record<keyof FormValues, string>>
         >({});
@@ -149,7 +159,7 @@ export default function PackagesPage() {
                 return;
             }
             setErrors({});
-            onSubmit(parsed.data);
+            onSubmit(parsed.data, selectedMedia);
         };
 
         return (
@@ -304,6 +314,13 @@ export default function PackagesPage() {
                     />
                     <InputError message={errors.description} />
                 </div>
+                <div className="pt-2">
+                    <MediaUpload
+                        onFilesSelected={setSelectedMedia}
+                        maxFiles={5}
+                        maxFileSize={5242880}
+                    />
+                </div>
                 <DialogFooter>
                     <Button type="submit" disabled={submitting}>
                         Save
@@ -328,32 +345,37 @@ export default function PackagesPage() {
                         <DialogHeader>
                             <DialogTitle>Edit Package</DialogTitle>
                         </DialogHeader>
-                        <PackageForm
-                            initial={{
-                                name: row.name,
-                                description: row.description,
-                                type: row.type as 'hajj' | 'umrah',
-                                duration_days: row.duration_days,
-                                price: row.price,
-                                departure_date: row.departure_date,
-                                return_date: row.return_date,
-                                available_slots: row.available_slots,
-                                is_featured: Boolean(row.is_featured ?? false),
-                            }}
-                            submitting={submitting}
-                            onSubmit={(values) => {
-                                setSubmitting(true);
-                                router.put(
-                                    packages.update.url(row.id),
-                                    values,
-                                    {
-                                        preserveScroll: true,
-                                        onFinish: () => setSubmitting(false),
-                                        onSuccess: () => setOpen(false),
-                                    },
-                                );
-                            }}
-                        />
+                        <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+                            <PackageForm
+                                initial={{
+                                    name: row.name,
+                                    description: row.description,
+                                    type: row.type as 'hajj' | 'umrah',
+                                    duration_days: row.duration_days,
+                                    price: row.price,
+                                    departure_date: row.departure_date,
+                                    return_date: row.return_date,
+                                    available_slots: row.available_slots,
+                                    is_featured: Boolean(
+                                        row.is_featured ?? false,
+                                    ),
+                                }}
+                                submitting={submitting}
+                                onSubmit={(values) => {
+                                    setSubmitting(true);
+                                    router.put(
+                                        packages.update.url(row.id),
+                                        values,
+                                        {
+                                            preserveScroll: true,
+                                            onFinish: () =>
+                                                setSubmitting(false),
+                                            onSuccess: () => setOpen(false),
+                                        },
+                                    );
+                                }}
+                            />
+                        </div>
                     </DialogContent>
                 </Dialog>
                 <AlertDialog>
@@ -409,16 +431,67 @@ export default function PackagesPage() {
                             <DialogHeader>
                                 <DialogTitle>Create Package</DialogTitle>
                             </DialogHeader>
-                            <PackageForm
-                                submitting={false}
-                                onSubmit={(values) =>
-                                    router.post(packages.store.url(), values, {
-                                        preserveScroll: true,
-                                        onSuccess: () => setCreateOpen(false),
-                                        onError: () => {},
-                                    })
-                                }
-                            />
+                            <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+                                <PackageForm
+                                    submitting={false}
+                                    onSubmit={(values, media) => {
+                                        const formData = new FormData();
+                                        Object.entries(values).forEach(
+                                            ([key, value]) => {
+                                                if (
+                                                    value !== null &&
+                                                    value !== undefined
+                                                ) {
+                                                    if (
+                                                        typeof value ===
+                                                        'boolean'
+                                                    ) {
+                                                        formData.append(
+                                                            key,
+                                                            value ? '1' : '0',
+                                                        );
+                                                    } else {
+                                                        formData.append(
+                                                            key,
+                                                            String(value),
+                                                        );
+                                                    }
+                                                }
+                                            },
+                                        );
+
+                                        if (media && media.length > 0) {
+                                            media.forEach((item, index) => {
+                                                formData.append(
+                                                    `media[${index}][file]`,
+                                                    item.file,
+                                                );
+                                                formData.append(
+                                                    `media[${index}][type]`,
+                                                    item.type,
+                                                );
+                                                if (item.altText) {
+                                                    formData.append(
+                                                        `media[${index}][alt_text]`,
+                                                        item.altText,
+                                                    );
+                                                }
+                                            });
+                                        }
+
+                                        router.post(
+                                            packages.store.url(),
+                                            formData,
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () =>
+                                                    setCreateOpen(false),
+                                                onError: () => {},
+                                            },
+                                        );
+                                    }}
+                                />
+                            </div>
                         </DialogContent>
                     </Dialog>
                 </div>

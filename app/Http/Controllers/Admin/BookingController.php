@@ -67,6 +67,8 @@ class BookingController extends Controller implements HasMiddleware
                 'by' => $sort,
                 'direction' => $direction,
             ],
+            'users' => \App\Models\User::select('id', 'name', 'email')->orderBy('name')->get(),
+            'packages' => \App\Models\Package::select('id', 'name')->orderBy('name')->get(),
         ]);
     }
 

@@ -21,6 +21,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import bookings from '@/routes/admin/bookings';
 import { type SharedData } from '@/types';
@@ -41,7 +48,7 @@ type BookingRow = {
 type Sort = { by: string; direction: 'asc' | 'desc' };
 
 export default function BookingsPage() {
-    const { items, filters, sort } = usePage<
+    const { items, filters, sort, users, packages } = usePage<
         SharedData & {
             items: {
                 data: BookingRow[];
@@ -54,6 +61,8 @@ export default function BookingsPage() {
             };
             filters: Record<string, unknown>;
             sort: Sort;
+            users: Array<{ id: number; name: string; email: string }>;
+            packages: Array<{ id: number; name: string }>;
         }
     >().props;
 
@@ -201,41 +210,59 @@ export default function BookingsPage() {
                         <InputError message={errors.booking_reference} />
                     </div>
                     <div>
-                        <Label htmlFor="user_id">User ID</Label>
-                        <Input
-                            id="user_id"
-                            type="number"
-                            min={1}
-                            value={values.user_id ?? ''}
-                            onChange={(e) =>
+                        <Label htmlFor="user_id">User</Label>
+                        <Select
+                            value={values.user_id?.toString() ?? ''}
+                            onValueChange={(value) =>
                                 setValues({
                                     ...values,
-                                    user_id:
-                                        e.target.value === ''
-                                            ? undefined
-                                            : Number(e.target.value),
+                                    user_id: value ? Number(value) : undefined,
                                 })
                             }
-                        />
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select user" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {users.map((user) => (
+                                    <SelectItem
+                                        key={user.id}
+                                        value={user.id.toString()}
+                                    >
+                                        {user.name} ({user.email})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <InputError message={errors.user_id} />
                     </div>
                     <div>
-                        <Label htmlFor="package_id">Package ID</Label>
-                        <Input
-                            id="package_id"
-                            type="number"
-                            min={1}
-                            value={values.package_id ?? ''}
-                            onChange={(e) =>
+                        <Label htmlFor="package_id">Package</Label>
+                        <Select
+                            value={values.package_id?.toString() ?? ''}
+                            onValueChange={(value) =>
                                 setValues({
                                     ...values,
-                                    package_id:
-                                        e.target.value === ''
-                                            ? undefined
-                                            : Number(e.target.value),
+                                    package_id: value
+                                        ? Number(value)
+                                        : undefined,
                                 })
                             }
-                        />
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select package" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {packages.map((pkg) => (
+                                    <SelectItem
+                                        key={pkg.id}
+                                        value={pkg.id.toString()}
+                                    >
+                                        {pkg.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <InputError message={errors.package_id} />
                     </div>
                 </div>

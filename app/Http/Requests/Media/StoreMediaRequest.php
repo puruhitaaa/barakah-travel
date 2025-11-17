@@ -21,10 +21,7 @@ class StoreMediaRequest extends FormRequest
             'mediable_type' => ['required', 'string'],
             'mediable_id' => ['required', 'integer', 'min:1'],
             'type' => ['required', 'in:image,video'],
-            'disk' => ['nullable', 'string', 'max:255'],
-            'path' => ['required', 'string'],
-            'mime_type' => ['nullable', 'string', 'max:255'],
-            'size' => ['nullable', 'integer', 'min:0'],
+            'path' => ['nullable', 'string'],
             'alt_text' => ['nullable', 'string', 'max:255'],
             'ordering' => ['nullable', 'integer', 'min:0'],
         ];

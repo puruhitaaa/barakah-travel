@@ -21,10 +21,7 @@ class UpdateMediaRequest extends FormRequest
             'mediable_type' => ['sometimes', 'required', 'string'],
             'mediable_id' => ['sometimes', 'required', 'integer', 'min:1'],
             'type' => ['sometimes', 'required', 'in:image,video'],
-            'disk' => ['nullable', 'string', 'max:255'],
-            'path' => ['sometimes', 'required', 'string'],
-            'mime_type' => ['nullable', 'string', 'max:255'],
-            'size' => ['nullable', 'integer', 'min:0'],
+            'path' => ['sometimes', 'nullable', 'string'],
             'alt_text' => ['nullable', 'string', 'max:255'],
             'ordering' => ['nullable', 'integer', 'min:0'],
         ];
