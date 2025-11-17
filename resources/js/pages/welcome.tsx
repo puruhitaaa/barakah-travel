@@ -27,7 +27,7 @@ export default function Welcome() {
 
     return (
         <>
-            <Head title="Welcome" />
+            <Head title="Welcome - Barakah Travel" />
             <main className="min-h-screen bg-background">
                 <Navigation />
                 <Hero />
