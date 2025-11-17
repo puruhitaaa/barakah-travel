@@ -35,6 +35,7 @@ import packages from '@/routes/admin/packages';
 import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 type PackageRow = {
@@ -371,7 +372,9 @@ export default function PackagesPage() {
                                                 value !== null &&
                                                 value !== undefined
                                             ) {
-                                                if (typeof value === 'boolean') {
+                                                if (
+                                                    typeof value === 'boolean'
+                                                ) {
                                                     formData.append(
                                                         key,
                                                         value ? '1' : '0',
@@ -412,7 +415,17 @@ export default function PackagesPage() {
                                             preserveScroll: true,
                                             onFinish: () =>
                                                 setSubmitting(false),
-                                            onSuccess: () => setOpen(false),
+                                            onSuccess: () => {
+                                                setOpen(false);
+                                                toast.success(
+                                                    'Package updated successfully!',
+                                                );
+                                            },
+                                            onError: () => {
+                                                toast.error(
+                                                    'Something went wrong when updating package!',
+                                                );
+                                            },
                                         },
                                     );
                                 }}
@@ -526,9 +539,17 @@ export default function PackagesPage() {
                                             formData,
                                             {
                                                 preserveScroll: true,
-                                                onSuccess: () =>
-                                                    setCreateOpen(false),
-                                                onError: () => {},
+                                                onSuccess: () => {
+                                                    setCreateOpen(false);
+                                                    toast.success(
+                                                        'Package created successfully!',
+                                                    );
+                                                },
+                                                onError: () => {
+                                                    toast.error(
+                                                        'Something went wrong when creating a package!',
+                                                    );
+                                                },
                                             },
                                         );
                                     }}

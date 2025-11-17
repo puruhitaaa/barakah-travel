@@ -105,7 +105,7 @@ class PackageController extends Controller implements HasMiddleware
                             type: $mediaItem['type'] ?? 'image',
                             altText: $mediaItem['alt_text'] ?? null,
                             disk: 'public',
-                        );
+                        )->afterCommit();
                     }
                 }
             }
@@ -149,7 +149,7 @@ class PackageController extends Controller implements HasMiddleware
                             type: $mediaItem['type'] ?? 'image',
                             altText: $mediaItem['alt_text'] ?? null,
                             disk: 'public',
-                        );
+                        )->afterCommit();
                     }
                 }
             }

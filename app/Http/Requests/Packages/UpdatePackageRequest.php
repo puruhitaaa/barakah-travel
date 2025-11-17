@@ -29,7 +29,7 @@ class UpdatePackageRequest extends FormRequest
             'is_featured' => ['sometimes', 'boolean'],
 
             'media' => ['sometimes', 'array'],
-            'media.*.file' => ['required', 'file', 'mimetypes:image/*,video/*', 'max:5120'],
+            'media.*.file' => ['required', 'file', 'mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi,wmv', 'max:5120'],
             'media.*.type' => ['required', 'in:image,video'],
             'media.*.alt_text' => ['nullable', 'string', 'max:255'],
         ];

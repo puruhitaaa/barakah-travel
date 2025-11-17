@@ -11,6 +11,14 @@ import { Head, usePage } from '@inertiajs/react';
 
 type Activity = string;
 
+type MediaItem = {
+    id: number;
+    path: string;
+    type: 'image' | 'video';
+    alt_text: string | null;
+    mime_type: string | null;
+};
+
 type ItineraryDay = {
     day: number;
     title: string;
@@ -32,6 +40,7 @@ type PackageData = {
     rating: number;
     reviews: number;
     image: string;
+    media: MediaItem[];
     includes: string[];
     excludes: string[];
     itinerary: ItineraryDay[];

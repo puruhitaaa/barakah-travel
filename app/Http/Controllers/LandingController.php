@@ -168,7 +168,7 @@ class LandingController extends Controller
     public function show(Package $package): Response
     {
         // Load relationships
-        $package->load(['bookings', 'accommodations', 'transportations', 'itineraries']);
+        $package->load(['bookings', 'accommodations', 'transportations', 'itineraries', 'media']);
 
         // Transform package data
         $transformedPackage = [
@@ -190,7 +190,13 @@ class LandingController extends Controller
                 : 'As scheduled',
             'rating' => 4.8,
             'reviews' => $package->bookings_count * 5,
-            'image' => $package->image ?? '/placeholder.svg?height=600&width=800',
+            'media' => $package->media->map(fn ($m) => [
+                'id' => $m->id,
+                'path' => '/storage/' . $m->path,
+                'type' => $m->type,
+                'alt_text' => $m->alt_text,
+                'mime_type' => $m->mime_type,
+            ])->all(),
             'includes' => $this->getPackageInclusions($package),
             'excludes' => [
                 'Travel insurance',

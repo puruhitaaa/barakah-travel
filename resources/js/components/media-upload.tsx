@@ -1,5 +1,4 @@
 import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -11,7 +10,6 @@ import {
 } from '@/components/ui/select';
 import { Upload, X } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { z } from 'zod';
 
 interface MediaFile {
     id: string;
@@ -29,13 +27,6 @@ interface MediaUploadProps {
     error?: string;
 }
 
-const mediaSchema = z.object({
-    type: z.enum(['image', 'video']),
-    altText: z.string().max(255).optional(),
-});
-
-type MediaFormValues = z.infer<typeof mediaSchema>;
-
 export default function MediaUpload({
     onFilesSelected,
     maxFiles = 5,
@@ -45,13 +36,12 @@ export default function MediaUpload({
 }: MediaUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [files, setFiles] = useState<MediaFile[]>([]);
-    const [uploading, setUploading] = useState(false);
     const [formErrors, setFormErrors] = useState<
         Record<string, Record<string, string>>
     >({});
 
     const [mediaForms, setMediaForms] = useState<
-        Record<string, MediaFormValues>
+        Record<string, { type: 'image' | 'video'; altText?: string }>
     >({});
 
     const getMediaType = (mimeType: string): 'image' | 'video' => {
@@ -112,13 +102,15 @@ export default function MediaUpload({
                 reader.readAsDataURL(file);
             }
 
-            newFiles.push({
+            const newFile: MediaFile = {
                 id,
                 file,
                 type: mediaType,
                 preview,
                 altText: '',
-            });
+            };
+
+            newFiles.push(newFile);
 
             setMediaForms((prev) => ({
                 ...prev,
@@ -140,6 +132,15 @@ export default function MediaUpload({
             setFiles(combinedFiles);
         }
 
+        // Automatically add files to parent component
+        const autoValidatedFiles = newFiles.map((file) => ({
+            ...file,
+            type: getMediaType(file.file.type),
+            altText: '',
+        }));
+
+        onFilesSelected([...files, ...autoValidatedFiles].slice(0, maxFiles));
+
         // Reset input
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -147,7 +148,9 @@ export default function MediaUpload({
     };
 
     const removeFile = (id: string) => {
-        setFiles((prev) => prev.filter((f) => f.id !== id));
+        const updatedFiles = files.filter((f) => f.id !== id);
+        setFiles(updatedFiles);
+
         setFormErrors((prev) => {
             const newErrors = { ...prev };
             delete newErrors[id];
@@ -158,11 +161,14 @@ export default function MediaUpload({
             delete newForms[id];
             return newForms;
         });
+
+        // Update parent
+        onFilesSelected(updatedFiles);
     };
 
     const updateMediaForm = (
         id: string,
-        key: keyof MediaFormValues,
+        key: 'type' | 'altText',
         value: string,
     ) => {
         setMediaForms((prev) => ({
@@ -172,47 +178,22 @@ export default function MediaUpload({
                 [key]: value,
             },
         }));
-    };
 
-    const handleUpload = () => {
-        setUploading(true);
-        // Validate all forms
-        const validatedFiles: MediaFile[] = [];
-
-        for (const file of files) {
-            const form = mediaForms[file.id];
-            const parsed = mediaSchema.safeParse(form);
-
-            if (!parsed.success) {
-                const fieldErrors: Record<string, string> = {};
-                parsed.error.issues.forEach((issue) => {
-                    const key = issue.path[0] as string;
-                    fieldErrors[key] = issue.message;
-                });
-                setFormErrors((prev) => ({
-                    ...prev,
-                    [file.id]: fieldErrors,
-                }));
-            } else {
-                validatedFiles.push({
-                    ...file,
-                    type: parsed.data.type,
-                    altText: parsed.data.altText,
-                });
+        // Update the file in files array
+        const updatedFiles = files.map((f) => {
+            if (f.id === id) {
+                return {
+                    ...f,
+                    [key === 'altText' ? 'altText' : 'type']: value,
+                };
             }
-        }
+            return f;
+        });
+        setFiles(updatedFiles);
 
-        if (validatedFiles.length === files.length) {
-            onFilesSelected(validatedFiles);
-            setFiles([]);
-            setFormErrors({});
-            setMediaForms({});
-        }
-
-        setUploading(false);
+        // Update parent
+        onFilesSelected(updatedFiles);
     };
-
-    const hasErrors = Object.keys(formErrors).length > 0;
 
     return (
         <div className="space-y-4">
@@ -232,12 +213,12 @@ export default function MediaUpload({
                         accept={acceptedMimes}
                         onChange={handleFileInputChange}
                         className="hidden"
-                        disabled={uploading || files.length >= maxFiles}
+                        disabled={files.length >= maxFiles}
                     />
                     <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading || files.length >= maxFiles}
+                        disabled={files.length >= maxFiles}
                         className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <Upload className="h-4 w-4" />
@@ -254,17 +235,6 @@ export default function MediaUpload({
                         <h3 className="text-sm font-semibold">
                             Selected Files ({files.length}/{maxFiles})
                         </h3>
-                        {files.length > 0 && (
-                            <Button
-                                type="button"
-                                size="sm"
-                                onClick={handleUpload}
-                                disabled={uploading || hasErrors}
-                                className="shrink-0"
-                            >
-                                {uploading ? 'Uploading...' : 'Add All'}
-                            </Button>
-                        )}
                     </div>
 
                     <div className="space-y-3">
