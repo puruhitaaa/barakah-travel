@@ -1,7 +1,7 @@
-import AppLogoIcon from '@/components/app-logo-icon';
 import { home } from '@/routes';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
+import { MoonStar } from 'lucide-react';
 import { type PropsWithChildren } from 'react';
 
 interface AuthLayoutProps {
@@ -24,7 +24,7 @@ export default function AuthSplitLayout({
                     href={home()}
                     className="relative z-20 flex items-center text-lg font-medium"
                 >
-                    <AppLogoIcon className="mr-2 size-8 fill-current text-white" />
+                    <MoonStar className="mr-2 size-8 text-white" />
                     {name}
                 </Link>
                 {quote && (
@@ -46,7 +46,7 @@ export default function AuthSplitLayout({
                         href={home()}
                         className="relative z-20 flex items-center justify-center lg:hidden"
                     >
-                        <AppLogoIcon className="h-10 fill-current text-black sm:h-12" />
+                        <MoonStar className="h-10 text-black sm:h-12" />
                     </Link>
                     <div className="flex flex-col items-start gap-2 text-left sm:items-center sm:text-center">
                         <h1 className="text-xl font-medium">{title}</h1>

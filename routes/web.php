@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AccommodationController;
 use App\Http\Controllers\Admin\BookingController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ItineraryController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PackageController;
@@ -19,9 +20,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
         Route::resource('packages', PackageController::class)->only(['index', 'store', 'update', 'destroy']);
