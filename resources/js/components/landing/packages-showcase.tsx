@@ -6,6 +6,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Link } from '@inertiajs/react';
 import { CheckCircle2 } from 'lucide-react';
 
 type Package = {
@@ -109,6 +110,7 @@ export function PackagesShowcase({ packages }: { packages: Package[] }) {
                                             ).toLocaleString('id-ID', {
                                                 style: 'currency',
                                                 currency: 'IDR',
+                                                currencyDisplay: 'code',
                                             })}
                                         </p>
                                     </div>
@@ -144,6 +146,7 @@ export function PackagesShowcase({ packages }: { packages: Package[] }) {
 
                                     {/* CTA Button */}
                                     <Button
+                                        asChild
                                         className={`w-full py-6 text-lg font-semibold transition-all duration-300 ${
                                             pkg.featured
                                                 ? 'bg-primary text-primary-foreground hover:bg-primary/90'
@@ -153,7 +156,11 @@ export function PackagesShowcase({ packages }: { packages: Package[] }) {
                                             pkg.featured ? 'default' : 'outline'
                                         }
                                     >
-                                        Book Now
+                                        <Link href={`/packages/${pkg.id}`}>
+                                            {pkg.featured
+                                                ? 'Book Now'
+                                                : 'View Details'}
+                                        </Link>
                                     </Button>
                                 </CardContent>
                             </Card>

@@ -1,7 +1,13 @@
 import { Button } from '@/components/ui/button';
+import { packages } from '@/routes';
+import { Link } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
 
-export function Hero() {
+type HeroProps = {
+    totalPackages: number;
+};
+
+export function Hero({ totalPackages }: HeroProps) {
     return (
         <section
             id="home"
@@ -35,9 +41,14 @@ export function Hero() {
 
                     {/* CTA Buttons */}
                     <div className="flex flex-col gap-4 pt-4 sm:flex-row">
-                        <Button className="flex items-center gap-2 rounded-lg bg-primary px-8 py-6 text-lg text-primary-foreground hover:bg-primary/90">
-                            Explore Packages
-                            <ArrowRight size={20} />
+                        <Button
+                            asChild
+                            className="flex items-center gap-2 rounded-lg bg-primary px-8 py-6 text-lg text-primary-foreground hover:bg-primary/90"
+                        >
+                            <Link href={packages.url()}>
+                                Explore Packages
+                                <ArrowRight size={20} />
+                            </Link>
                         </Button>
                         <Button
                             variant="outline"
@@ -67,7 +78,7 @@ export function Hero() {
                         </div>
                         <div>
                             <p className="text-3xl font-bold text-primary">
-                                50+
+                                {totalPackages}+
                             </p>
                             <p className="mt-1 text-sm text-foreground/60">
                                 Packages

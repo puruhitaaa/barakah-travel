@@ -24,7 +24,7 @@ type Package = {
     type: string;
     duration_days: number;
     duration: string;
-    price: string | number;
+    price: number;
     description?: string;
     featured: boolean;
     booking_count: number;
@@ -200,7 +200,11 @@ export function PackagesList({
                                         Starting from
                                     </p>
                                     <p className="text-3xl font-bold text-primary">
-                                        {pkg.price}
+                                        {pkg.price.toLocaleString('id-ID', {
+                                            style: 'currency',
+                                            currency: 'IDR',
+                                            currencyDisplay: 'code',
+                                        })}
                                     </p>
                                 </div>
 
@@ -244,7 +248,8 @@ export function PackagesList({
 
                                 {/* CTA Button */}
                                 <Button
-                                    className={`mt-auto w-full py-5 font-semibold transition-all duration-300 ${
+                                    asChild
+                                    className={`w-full py-5 font-semibold transition-all duration-300 ${
                                         pkg.featured
                                             ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                                             : 'border-2 border-primary text-primary hover:bg-primary/10'
@@ -253,7 +258,9 @@ export function PackagesList({
                                         pkg.featured ? 'default' : 'outline'
                                     }
                                 >
-                                    View Details
+                                    <Link href={`/packages/${pkg.id}`}>
+                                        View Details
+                                    </Link>
                                 </Button>
                             </CardContent>
                         </Card>

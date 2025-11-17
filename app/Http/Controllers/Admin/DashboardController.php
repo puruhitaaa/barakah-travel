@@ -30,7 +30,7 @@ class DashboardController extends Controller implements HasMiddleware
         $stats = [
             'total_packages' => Package::count(),
             'total_bookings' => Booking::count(),
-            'total_revenue' => Transaction::where('status', 'success')->sum('amount'),
+            'total_revenue' => (float) Transaction::where('status', 'success')->sum('amount'),
             'total_users' => User::count(),
         ];
 

@@ -131,7 +131,9 @@ export function Footer() {
                                     size={18}
                                     className="mt-1 flex-shrink-0"
                                 />
-                                <span>123 Hajj Street, Dubai, UAE</span>
+                                <span>
+                                    123 Hajj Street, East Java, Indonesia
+                                </span>
                             </div>
                         </div>
                     </div>

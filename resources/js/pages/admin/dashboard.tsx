@@ -25,6 +25,7 @@ import {
     Cell,
     Pie,
     PieChart,
+    PieLabelRenderProps,
     ResponsiveContainer,
     Tooltip,
     XAxis,
@@ -157,6 +158,7 @@ export default function Dashboard() {
                                 {stats.total_revenue.toLocaleString('id-ID', {
                                     currency: 'IDR',
                                     style: 'currency',
+                                    currencyDisplay: 'code',
                                 })}
                             </div>
                             <p className="text-xs text-muted-foreground">
@@ -282,9 +284,11 @@ export default function Dashboard() {
                                         cx="50%"
                                         cy="50%"
                                         outerRadius={80}
-                                        label={(entry) =>
-                                            `${entry.status}: ${entry.count}`
-                                        }
+                                        label={(props: PieLabelRenderProps) => {
+                                            const payload =
+                                                props.payload as StatusCount;
+                                            return `${payload.status}: ${payload.count}`;
+                                        }}
                                     >
                                         {bookingsByStatus.map(
                                             (entry, index) => (
@@ -324,9 +328,11 @@ export default function Dashboard() {
                                         cx="50%"
                                         cy="50%"
                                         outerRadius={80}
-                                        label={(entry) =>
-                                            `${entry.type}: ${entry.count}`
-                                        }
+                                        label={(props: PieLabelRenderProps) => {
+                                            const payload =
+                                                props.payload as TypeCount;
+                                            return `${payload.type}: ${payload.count}`;
+                                        }}
                                     >
                                         {packagesByType.map((entry, index) => (
                                             <Cell

@@ -19,18 +19,19 @@ type Package = {
 };
 
 export default function Welcome() {
-    const { packages } = usePage<
+    const { packages, totalPackages } = usePage<
         SharedData & {
             packages: Package[];
+            totalPackages: number;
         }
     >().props;
 
     return (
         <>
-            <Head title="Welcome - Barakah Travel" />
+            <Head title="Welcome" />
             <main className="min-h-screen bg-background">
                 <Navigation />
-                <Hero />
+                <Hero totalPackages={totalPackages} />
                 <Features />
                 <PackagesShowcase packages={packages} />
                 <CTASection />

@@ -13,7 +13,7 @@ type Package = {
     type: string;
     duration_days: number;
     duration: string;
-    price: string | number;
+    price: number;
     description?: string;
     featured: boolean;
     booking_count: number;
@@ -37,7 +37,7 @@ export default function PackagesPage() {
     >().props;
     return (
         <>
-            <Head title="Packages - Barakah Travel" />
+            <Head title="Packages" />
             <main className="min-h-screen bg-background">
                 <Navigation />
                 <PackagePageHero totalPackages={totalPackages} />

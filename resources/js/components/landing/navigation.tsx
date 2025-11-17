@@ -1,5 +1,6 @@
 'use client';
 
+import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 import { Button } from '@/components/ui/button';
 import { home, packages } from '@/routes';
 import { Menu, X } from 'lucide-react';
@@ -49,6 +50,9 @@ export function Navigation() {
 
                     {/* CTA Button & Mobile Menu */}
                     <div className="flex items-center gap-4">
+                        {/* Theme Toggle */}
+                        <AppearanceToggleDropdown />
+
                         <Button className="hidden bg-primary text-primary-foreground hover:bg-primary/90 sm:inline-flex">
                             Book Now
                         </Button>
