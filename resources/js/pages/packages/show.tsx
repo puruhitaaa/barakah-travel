@@ -46,7 +46,7 @@ export default function PackageDetailPage() {
 
     return (
         <main className="min-h-screen bg-background">
-            <Head title={`${pkg.name} - Barakah Travel`} />
+            <Head title={pkg.name} />
             <Navigation />
             <PackageDetailHero pkg={pkg} />
             <div className="mx-auto grid max-w-7xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-3 lg:px-8">

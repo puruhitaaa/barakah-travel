@@ -55,10 +55,18 @@ class FortifyServiceProvider extends ServiceProvider
                 {
                     $user = $request->user();
 
-                    // Check for callback URL from query parameters
-                    $callbackUrl = $request->query('callbackUrl');
-                    if ($callbackUrl) {
-                        return redirect($callbackUrl);
+                    $callbackUrl = (string) ($request->input('callbackUrl') ?? $request->query('callbackUrl'));
+                    if ($callbackUrl !== '') {
+                        $parsed = parse_url($callbackUrl);
+                        if (! isset($parsed['scheme']) && Str::startsWith($callbackUrl, '/')) {
+                            return redirect($callbackUrl);
+                        }
+                        $appUrl = (string) config('app.url');
+                        $appHost = parse_url($appUrl, PHP_URL_HOST);
+                        $cbHost = $parsed['host'] ?? null;
+                        if ($cbHost && $appHost && $cbHost === $appHost) {
+                            return redirect($callbackUrl);
+                        }
                     }
 
                     if ($user->hasRole('admin')) {
@@ -82,10 +90,18 @@ class FortifyServiceProvider extends ServiceProvider
                 {
                     $user = $request->user();
 
-                    // Check for callback URL from query parameters
-                    $callbackUrl = $request->query('callbackUrl');
-                    if ($callbackUrl) {
-                        return redirect($callbackUrl);
+                    $callbackUrl = (string) ($request->input('callbackUrl') ?? $request->query('callbackUrl'));
+                    if ($callbackUrl !== '') {
+                        $parsed = parse_url($callbackUrl);
+                        if (! isset($parsed['scheme']) && Str::startsWith($callbackUrl, '/')) {
+                            return redirect($callbackUrl);
+                        }
+                        $appUrl = (string) config('app.url');
+                        $appHost = parse_url($appUrl, PHP_URL_HOST);
+                        $cbHost = $parsed['host'] ?? null;
+                        if ($cbHost && $appHost && $cbHost === $appHost) {
+                            return redirect($callbackUrl);
+                        }
                     }
 
                     if ($user->hasRole('admin')) {
