@@ -89,8 +89,70 @@ class LandingController extends Controller
         $packages = $allPackages->slice(($currentPage - 1) * $perPage, $perPage)->values();
         $totalPages = (int) ceil($totalPackages / $perPage);
 
+        // Get packages for comparison (top 4)
+        $comparisonPackages = Package::orderByDesc('is_featured')
+            ->limit(4)
+            ->get()
+            ->map(function ($package) {
+                return [
+                    'id' => $package->id,
+                    'name' => $package->name,
+                    'price' => $package->price,
+                ];
+            });
+
+        // Generate comparison data from packages
+        $comparisonData = [
+            [
+                'feature' => 'Duration (Days)',
+                ...array_reduce(
+                    $comparisonPackages->values()->all(),
+                    function ($result, $pkg) {
+                        $package = Package::find($pkg['id']);
+                        $result['pkg_' . $pkg['id']] = $package->duration_days . ' Days';
+                        return $result;
+                    },
+                    []
+                ),
+            ],
+            [
+                'feature' => 'Price',
+                ...array_reduce(
+                    $comparisonPackages->values()->all(),
+                    function ($result, $pkg) {
+                        $result['pkg_' . $pkg['id']] = '$' . number_format($pkg['price']);
+                        return $result;
+                    },
+                    []
+                ),
+            ],
+            [
+                'feature' => 'Hotel Rating',
+                'pkg_' . ($comparisonPackages[0]['id'] ?? null) => '3-star',
+                'pkg_' . ($comparisonPackages[1]['id'] ?? null) => '4-star',
+                'pkg_' . ($comparisonPackages[2]['id'] ?? null) => '4-star',
+                'pkg_' . ($comparisonPackages[3]['id'] ?? null) => '5-star',
+            ],
+            [
+                'feature' => '24/7 Support',
+                'pkg_' . ($comparisonPackages[0]['id'] ?? null) => false,
+                'pkg_' . ($comparisonPackages[1]['id'] ?? null) => true,
+                'pkg_' . ($comparisonPackages[2]['id'] ?? null) => true,
+                'pkg_' . ($comparisonPackages[3]['id'] ?? null) => true,
+            ],
+            [
+                'feature' => 'Travel Insurance',
+                'pkg_' . ($comparisonPackages[0]['id'] ?? null) => false,
+                'pkg_' . ($comparisonPackages[1]['id'] ?? null) => false,
+                'pkg_' . ($comparisonPackages[2]['id'] ?? null) => false,
+                'pkg_' . ($comparisonPackages[3]['id'] ?? null) => true,
+            ],
+        ];
+
         return Inertia::render('packages/index', [
             'packages' => $packages,
+            'comparisonPackages' => $comparisonPackages,
+            'comparisonData' => $comparisonData,
             'totalPackages' => $totalPackages,
             'currentPage' => $currentPage,
             'perPage' => $perPage,
