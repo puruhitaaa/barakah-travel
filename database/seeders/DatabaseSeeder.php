@@ -15,8 +15,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Create roles and permissions
+        foreach (['package_manage', 'booking_manage', 'payment_process', 'content_manage'] as $name) {
+            Permission::findOrCreate($name);
+        }
 
+        $admin = Role::findOrCreate('admin');
+        $staff = Role::findOrCreate('staff');
+        $customer = Role::findOrCreate('customer');
+
+        $admin->givePermissionTo(['package_manage', 'booking_manage', 'payment_process', 'content_manage']);
+        $staff->givePermissionTo(['package_manage', 'booking_manage', 'payment_process']);
+        $customer->givePermissionTo(['booking_manage']);
+
+        // Create test users
         $user = User::firstOrCreate(
             ['email' => 'test@example.com'],
             [
@@ -35,19 +47,22 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        foreach (['package_manage', 'booking_manage', 'payment_process', 'content_manage'] as $name) {
-            Permission::findOrCreate($name);
-        }
-
-        $admin = Role::findOrCreate('admin');
-        $staff = Role::findOrCreate('staff');
-        $customer = Role::findOrCreate('customer');
-
-        $admin->givePermissionTo(['package_manage', 'booking_manage', 'payment_process', 'content_manage']);
-        $staff->givePermissionTo(['package_manage', 'booking_manage', 'payment_process']);
-        $customer->givePermissionTo(['booking_manage']);
-
         $user->assignRole('admin');
         $staffUser->assignRole('staff');
+
+        // Call all seeders in proper dependency order
+        $this->call([
+            PackageSeeder::class,
+            AccommodationSeeder::class,
+            TransportationSeeder::class,
+            ItinerarySeeder::class,
+            BookingSeeder::class,
+            PaymentGatewaySeeder::class,
+            TransactionSeeder::class,
+            MediaSeeder::class,
+            AccommodationPackageSeeder::class,
+            PackageTransportationSeeder::class,
+            ItineraryPackageSeeder::class,
+        ]);
     }
 }

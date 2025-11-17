@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Admin\AccommodationController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -16,11 +17,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
-Route::get('/', function () {
-    return Inertia::render('welcome', [
-        'canRegister' => Features::enabled(Features::registration()),
-    ]);
-})->name('home');
+Route::get('/', [LandingController::class, 'index'])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {

@@ -4,10 +4,26 @@ import { Footer } from '@/components/landing/footer';
 import { Hero } from '@/components/landing/hero';
 import { Navigation } from '@/components/landing/navigation';
 import { PackagesShowcase } from '@/components/landing/packages-showcase';
-import { Head } from '@inertiajs/react';
+import { type SharedData } from '@/types';
+import { Head, usePage } from '@inertiajs/react';
+
+type Package = {
+    id: number;
+    name: string;
+    type: string;
+    duration_days: number;
+    price: string | number;
+    description?: string;
+    featured: boolean;
+    booking_count: number;
+};
 
 export default function Welcome() {
-    // const { auth } = usePage<SharedData>().props;
+    const { packages } = usePage<
+        SharedData & {
+            packages: Package[];
+        }
+    >().props;
 
     return (
         <>
@@ -16,7 +32,7 @@ export default function Welcome() {
                 <Navigation />
                 <Hero />
                 <Features />
-                <PackagesShowcase />
+                <PackagesShowcase packages={packages} />
                 <CTASection />
                 <Footer />
             </main>
