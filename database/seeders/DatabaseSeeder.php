@@ -26,6 +26,15 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $staffUser = User::firstOrCreate(
+            ['email' => 'staff@example.com'],
+            [
+                'name' => 'Staff User',
+                'password' => 'password',
+                'email_verified_at' => now(),
+            ]
+        );
+
         foreach (['package_manage', 'booking_manage', 'payment_process', 'content_manage'] as $name) {
             Permission::findOrCreate($name);
         }
@@ -39,5 +48,6 @@ class DatabaseSeeder extends Seeder
         $customer->givePermissionTo(['booking_manage']);
 
         $user->assignRole('admin');
+        $staffUser->assignRole('staff');
     }
 }

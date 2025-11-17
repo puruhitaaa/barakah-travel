@@ -90,7 +90,7 @@ class DashboardController extends Controller implements HasMiddleware
                 'count' => $item->count,
             ]);
 
-        return Inertia::render('dashboard', [
+        return Inertia::render('admin/dashboard', [
             'stats' => $stats,
             'monthlyRevenue' => $monthlyRevenue,
             'bookingsByStatus' => $bookingsByStatus,

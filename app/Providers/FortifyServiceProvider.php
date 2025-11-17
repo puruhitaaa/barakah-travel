@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 
@@ -40,6 +42,48 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+        $this->configureLoginResponse();
+        $this->configureRegisterResponse();
+    }
+
+    private function configureLoginResponse(): void
+    {
+        $this->app->singleton(LoginResponse::class, function () {
+            return new class implements LoginResponse {
+                public function toResponse($request)
+                {
+                    $user = $request->user();
+
+                    if ($user->hasRole('admin')) {
+                        return redirect()->intended('/admin/dashboard');
+                    } elseif ($user->hasRole('staff')) {
+                        return redirect()->intended('/staff/dashboard');
+                    }
+
+                    return redirect()->intended('/');
+                }
+            };
+        });
+    }
+
+    private function configureRegisterResponse(): void
+    {
+        $this->app->singleton(RegisterResponse::class, function () {
+            return new class implements RegisterResponse {
+                public function toResponse($request)
+                {
+                    $user = $request->user();
+
+                    if ($user->hasRole('admin')) {
+                        return redirect()->intended('/admin/dashboard');
+                    } elseif ($user->hasRole('staff')) {
+                        return redirect()->intended('/staff/dashboard');
+                    }
+
+                    return redirect()->intended('/');
+                }
+            };
+        });
     }
 
     /**

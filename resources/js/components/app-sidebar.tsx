@@ -9,8 +9,8 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import admin from '@/routes/admin';
+import staff from '@/routes/staff';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
@@ -32,16 +32,18 @@ function useMainNavItems(): NavItem[] {
     >();
     const roles: string[] = props.auth?.roles ?? [];
 
-    const items: NavItem[] = [
-        {
-            title: 'Dashboard',
-            href: dashboard(),
-            icon: LayoutGrid,
-        },
-    ];
+    const isAdmin = roles.includes('admin');
+    const isStaff = roles.includes('staff');
 
-    if (roles.includes('admin')) {
+    const items: NavItem[] = [];
+
+    if (isAdmin) {
         items.push(
+            {
+                title: 'Dashboard',
+                href: admin.dashboard.url(),
+                icon: LayoutGrid,
+            },
             {
                 title: 'Packages',
                 href: admin.packages.index.url(),
@@ -79,12 +81,38 @@ function useMainNavItems(): NavItem[] {
             },
             { title: 'Media', href: admin.media.index.url(), icon: Images },
         );
+    } else if (isStaff) {
+        items.push(
+            {
+                title: 'Dashboard',
+                href: staff.dashboard.url(),
+                icon: LayoutGrid,
+            },
+            {
+                title: 'Bookings',
+                href: staff.bookings.index.url(),
+                icon: ClipboardList,
+            },
+            {
+                title: 'Transactions',
+                href: staff.transactions.index.url(),
+                icon: ReceiptText,
+            },
+        );
     }
 
     return items;
 }
 
 export function AppSidebar() {
+    const { props } = usePage<
+        SharedData & { auth: SharedData['auth'] & { roles: string[] } }
+    >();
+    const roles: string[] = props.auth?.roles ?? [];
+
+    const isAdmin = roles.includes('admin');
+    const isStaff = roles.includes('staff');
+
     const mainNavItems = useMainNavItems();
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -92,7 +120,16 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link
+                                href={
+                                    isAdmin
+                                        ? admin.dashboard.url()
+                                        : isStaff
+                                          ? staff.dashboard.url()
+                                          : '/'
+                                }
+                                prefetch
+                            >
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

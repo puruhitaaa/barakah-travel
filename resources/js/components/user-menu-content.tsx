@@ -47,7 +47,10 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                 </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem
+                className="cursor-pointer bg-destructive/50 text-destructive-foreground hover:bg-destructive!"
+                asChild
+            >
                 <Link
                     className="block w-full"
                     href={logout()}
@@ -55,7 +58,7 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                     onClick={handleLogout}
                     data-test="logout-button"
                 >
-                    <LogOut className="mr-2" />
+                    <LogOut className="mr-2 text-destructive-foreground" />
                     Log out
                 </Link>
             </DropdownMenuItem>
