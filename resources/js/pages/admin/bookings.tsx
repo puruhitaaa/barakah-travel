@@ -33,6 +33,7 @@ import bookings from '@/routes/admin/bookings';
 import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 type BookingRow = {
@@ -317,7 +318,17 @@ export default function BookingsPage() {
                                     {
                                         preserveScroll: true,
                                         onFinish: () => setSubmitting(false),
-                                        onSuccess: () => setOpen(false),
+                                        onSuccess: () => {
+                                            setOpen(false);
+                                            toast.success(
+                                                'Booking updated successfully!',
+                                            );
+                                        },
+                                        onError: () => {
+                                            toast.error(
+                                                'Something went wrong when updating booking!',
+                                            );
+                                        },
                                     },
                                 );
                             }}
@@ -338,7 +349,20 @@ export default function BookingsPage() {
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={() =>
-                                    router.delete(bookings.destroy.url(row.id))
+                                    router.delete(
+                                        bookings.destroy.url(row.id),
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    'Booking deleted successfully!',
+                                                ),
+                                            onError: () =>
+                                                toast.error(
+                                                    'Something went wrong when deleting booking!',
+                                                ),
+                                        },
+                                    )
                                 }
                             >
                                 Delete
@@ -380,8 +404,17 @@ export default function BookingsPage() {
                                 onSubmit={(values) =>
                                     router.post(bookings.store.url(), values, {
                                         preserveScroll: true,
-                                        onSuccess: () => setCreateOpen(false),
-                                        onError: () => {},
+                                        onSuccess: () => {
+                                            setCreateOpen(false);
+                                            toast.success(
+                                                'Booking created successfully!',
+                                            );
+                                        },
+                                        onError: () => {
+                                            toast.error(
+                                                'Something went wrong when creating booking!',
+                                            );
+                                        },
                                     })
                                 }
                             />

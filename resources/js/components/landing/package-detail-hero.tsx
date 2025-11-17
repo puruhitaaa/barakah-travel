@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, Clock, Star, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 
 type MediaItem = {
     id: number;
@@ -20,29 +20,71 @@ type PackageHeroProps = {
         duration: string;
         group: string;
     };
+    /**
+     * Optional aria-describedby support: pass `true` to automatically attach the
+     * generated hint id to the nav buttons, or pass a string to use a custom id.
+     */
+    navHintDescribedBy?: boolean | string;
 };
 
-export function PackageDetailHero({ pkg }: PackageHeroProps) {
+export function PackageDetailHero({
+    pkg,
+    navHintDescribedBy,
+}: PackageHeroProps) {
+    const hintId = useId();
     const [activeIndex, setActiveIndex] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(false);
+    const [, setIsPlaying] = useState(false);
 
     const hasMedia = pkg.media && pkg.media.length > 0;
     const currentMedia = hasMedia ? pkg.media[activeIndex] : null;
     const isVideo = currentMedia?.type === 'video';
 
-    const goToPrevious = () => {
+    const goToPrevious = useCallback(() => {
         setActiveIndex((prev) =>
             prev === 0 ? pkg.media.length - 1 : prev - 1,
         );
         setIsPlaying(false);
-    };
+    }, [pkg.media.length]);
 
-    const goToNext = () => {
+    const goToNext = useCallback(() => {
         setActiveIndex((prev) =>
             prev === pkg.media.length - 1 ? 0 : prev + 1,
         );
         setIsPlaying(false);
-    };
+    }, [pkg.media.length]);
+
+    // Resolve describedBy id - accept `true` to use the generated id, or a
+    // string to use a custom id. If not provided, no aria-describedby is used.
+    const describedById =
+        navHintDescribedBy === true
+            ? hintId
+            : typeof navHintDescribedBy === 'string'
+              ? navHintDescribedBy
+              : undefined;
+
+    // Keyboard navigation for desktop (left and right arrows)
+    useEffect(() => {
+        if (!hasMedia || pkg.media.length <= 1) return;
+
+        const mediaQuery = window.matchMedia('(min-width: 768px)');
+
+        const handleKey = (e: KeyboardEvent) => {
+            // Only use arrow keys on desktop
+            if (!mediaQuery.matches) return;
+
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                goToPrevious();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                goToNext();
+            }
+        };
+
+        window.addEventListener('keydown', handleKey);
+
+        return () => window.removeEventListener('keydown', handleKey);
+    }, [hasMedia, pkg.media.length, goToPrevious, goToNext]);
 
     // const handleMediaClick = () => {
     //     if (isVideo) {
@@ -98,6 +140,9 @@ export function PackageDetailHero({ pkg }: PackageHeroProps) {
                         onClick={goToPrevious}
                         className="absolute top-1/2 left-4 z-10 -translate-y-1/2 cursor-pointer rounded-full bg-white/20 p-2 backdrop-blur-sm transition-all hover:bg-white/30 sm:left-6"
                         aria-label="Previous media"
+                        {...(describedById
+                            ? { 'aria-describedby': describedById }
+                            : {})}
                     >
                         <ChevronLeft size={24} className="text-white" />
                     </button>
@@ -105,6 +150,9 @@ export function PackageDetailHero({ pkg }: PackageHeroProps) {
                         onClick={goToNext}
                         className="absolute top-1/2 right-4 z-10 -translate-y-1/2 cursor-pointer rounded-full bg-white/20 p-2 backdrop-blur-sm transition-all hover:bg-white/30 sm:right-6"
                         aria-label="Next media"
+                        {...(describedById
+                            ? { 'aria-describedby': describedById }
+                            : {})}
                     >
                         <ChevronRight size={24} className="text-white" />
                     </button>
@@ -112,8 +160,8 @@ export function PackageDetailHero({ pkg }: PackageHeroProps) {
             )}
 
             {/* Media Indicators */}
-            {hasMedia && pkg.media.length > 1 && !isPlaying && (
-                <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+            {hasMedia && pkg.media.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
                     {pkg.media.map((_, index) => (
                         <button
                             key={index}
@@ -121,7 +169,7 @@ export function PackageDetailHero({ pkg }: PackageHeroProps) {
                                 setActiveIndex(index);
                                 setIsPlaying(false);
                             }}
-                            className={`h-2 rounded-full transition-all ${
+                            className={`h-2 cursor-pointer rounded-full transition-all ${
                                 index === activeIndex
                                     ? 'w-8 bg-white'
                                     : 'w-2 bg-white/50 hover:bg-white/70'
@@ -129,6 +177,18 @@ export function PackageDetailHero({ pkg }: PackageHeroProps) {
                             aria-label={`Go to media ${index + 1}`}
                         />
                     ))}
+                </div>
+            )}
+
+            {/* Desktop-only keyboard hint */}
+            {hasMedia && pkg.media.length > 1 && (
+                <div
+                    id={describedById}
+                    role="note"
+                    className="absolute right-6 bottom-16 z-10 hidden text-sm text-white/80 md:block"
+                >
+                    Use <span className="mx-1">←</span> and{' '}
+                    <span className="mx-1">→</span> to navigate
                 </div>
             )}
 

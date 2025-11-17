@@ -42,7 +42,7 @@ class PaymentGatewayController extends Controller implements HasMiddleware
         $direction = $direction === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sort, $direction);
 
-        $perPage = max(1, min((int) $request->query('per_page', 15), 100));
+        $perPage = max(1, min((int) $request->query('per_page', 10), 100));
         $items = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('admin/payment-gateways', [

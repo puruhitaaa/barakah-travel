@@ -34,6 +34,7 @@ import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 type MediaRow = {
@@ -306,7 +307,17 @@ export default function MediaPage() {
                                     {
                                         preserveScroll: true,
                                         onFinish: () => setSubmitting(false),
-                                        onSuccess: () => setOpen(false),
+                                        onSuccess: () => {
+                                            setOpen(false);
+                                            toast.success(
+                                                'Media updated successfully!',
+                                            );
+                                        },
+                                        onError: () => {
+                                            toast.error(
+                                                'Something went wrong when updating media!',
+                                            );
+                                        },
                                     },
                                 );
                             }}
@@ -329,6 +340,17 @@ export default function MediaPage() {
                                 onClick={() =>
                                     router.delete(
                                         mediaRoutes.destroy.url(row.id),
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    'Media deleted successfully!',
+                                                ),
+                                            onError: () =>
+                                                toast.error(
+                                                    'Something went wrong when deleting media!',
+                                                ),
+                                        },
                                     )
                                 }
                             >
@@ -384,8 +406,17 @@ export default function MediaPage() {
                                             preserveScroll: true,
                                             onFinish: () =>
                                                 setSubmitting(false),
-                                            onSuccess: () =>
-                                                setCreateOpen(false),
+                                            onSuccess: () => {
+                                                setCreateOpen(false);
+                                                toast.success(
+                                                    'Media created successfully!',
+                                                );
+                                            },
+                                            onError: () => {
+                                                toast.error(
+                                                    'Something went wrong when creating media!',
+                                                );
+                                            },
                                         },
                                     );
                                 }}

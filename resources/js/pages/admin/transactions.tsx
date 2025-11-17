@@ -34,6 +34,7 @@ import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 type TransactionRow = {
@@ -327,7 +328,17 @@ export default function TransactionsPage() {
                                     {
                                         preserveScroll: true,
                                         onFinish: () => setSubmitting(false),
-                                        onSuccess: () => setOpen(false),
+                                        onSuccess: () => {
+                                            setOpen(false);
+                                            toast.success(
+                                                'Transaction updated successfully!',
+                                            );
+                                        },
+                                        onError: () => {
+                                            toast.error(
+                                                'Something went wrong when updating transaction!',
+                                            );
+                                        },
                                     },
                                 );
                             }}
@@ -352,6 +363,17 @@ export default function TransactionsPage() {
                                 onClick={() =>
                                     router.delete(
                                         transactions.destroy.url(row.id),
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    'Transaction deleted successfully!',
+                                                ),
+                                            onError: () =>
+                                                toast.error(
+                                                    'Something went wrong when deleting transaction!',
+                                                ),
+                                        },
                                     )
                                 }
                             >
@@ -407,8 +429,17 @@ export default function TransactionsPage() {
                                             preserveScroll: true,
                                             onFinish: () =>
                                                 setSubmitting(false),
-                                            onSuccess: () =>
-                                                setCreateOpen(false),
+                                            onSuccess: () => {
+                                                setCreateOpen(false);
+                                                toast.success(
+                                                    'Transaction created successfully!',
+                                                );
+                                            },
+                                            onError: () => {
+                                                toast.error(
+                                                    'Something went wrong when creating transaction!',
+                                                );
+                                            },
                                         },
                                     );
                                 }}

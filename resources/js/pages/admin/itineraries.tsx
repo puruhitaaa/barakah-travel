@@ -26,6 +26,7 @@ import itineraries from '@/routes/admin/itineraries';
 import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 type ItineraryRow = {
@@ -215,7 +216,17 @@ export default function ItinerariesPage() {
                                     {
                                         preserveScroll: true,
                                         onFinish: () => setSubmitting(false),
-                                        onSuccess: () => setOpen(false),
+                                        onSuccess: () => {
+                                            setOpen(false);
+                                            toast.success(
+                                                'Itinerary updated successfully!',
+                                            );
+                                        },
+                                        onError: () => {
+                                            toast.error(
+                                                'Something went wrong when updating itinerary!',
+                                            );
+                                        },
                                     },
                                 );
                             }}
@@ -240,6 +251,17 @@ export default function ItinerariesPage() {
                                 onClick={() =>
                                     router.delete(
                                         itineraries.destroy.url(row.id),
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    'Itinerary deleted successfully!',
+                                                ),
+                                            onError: () =>
+                                                toast.error(
+                                                    'Something went wrong when deleting itinerary!',
+                                                ),
+                                        },
                                     )
                                 }
                             >
@@ -286,9 +308,17 @@ export default function ItinerariesPage() {
                                         values,
                                         {
                                             preserveScroll: true,
-                                            onSuccess: () =>
-                                                setCreateOpen(false),
-                                            onError: () => {},
+                                            onSuccess: () => {
+                                                setCreateOpen(false);
+                                                toast.success(
+                                                    'Itinerary created successfully!',
+                                                );
+                                            },
+                                            onError: () => {
+                                                toast.error(
+                                                    'Something went wrong when creating itinerary!',
+                                                );
+                                            },
                                         },
                                     )
                                 }

@@ -9,11 +9,11 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Upload, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface MediaFile {
     id: string;
-    file: File;
+    file?: File; // undefined for existing remote files
     type: 'image' | 'video';
     preview?: string;
     altText?: string;
@@ -21,6 +21,14 @@ interface MediaFile {
 
 interface MediaUploadProps {
     onFilesSelected: (files: MediaFile[]) => void;
+    /** Optional initial files shown in the upload area; these will not be set as File objects */
+    initialFiles?: Array<{
+        id: number | string;
+        path: string;
+        type: 'image' | 'video';
+        alt_text?: string | null;
+        mime_type?: string | null;
+    }>;
     maxFiles?: number;
     acceptedMimes?: string;
     maxFileSize?: number; // in bytes
@@ -29,6 +37,7 @@ interface MediaUploadProps {
 
 export default function MediaUpload({
     onFilesSelected,
+    initialFiles,
     maxFiles = 5,
     acceptedMimes = 'image/*,video/*',
     maxFileSize = 5242880, // 5MB
@@ -36,6 +45,39 @@ export default function MediaUpload({
 }: MediaUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [files, setFiles] = useState<MediaFile[]>([]);
+    // Load initial remote files when provided
+    useEffect(() => {
+        if (!initialFiles || initialFiles.length === 0) return;
+
+        const mapped = initialFiles.slice(0, maxFiles).map(
+            (f) =>
+                ({
+                    id: `remote-${f.id}`,
+                    type: f.type,
+                    preview: f.path,
+                    altText: f.alt_text ?? '',
+                }) as MediaFile,
+        );
+
+        setFiles((prev) => {
+            const combined = [...mapped, ...prev].slice(0, maxFiles);
+            // set initial media form defaults for remote files
+            const mediaDefaults = mapped.reduce(
+                (acc, f) => {
+                    acc[f.id] = { type: f.type, altText: f.altText };
+                    return acc;
+                },
+                {} as Record<
+                    string,
+                    { type: 'image' | 'video'; altText?: string }
+                >,
+            );
+
+            setMediaForms((prevForms) => ({ ...mediaDefaults, ...prevForms }));
+            onFilesSelected(combined);
+            return combined;
+        });
+    }, [initialFiles, maxFiles, onFilesSelected]);
     const [formErrors, setFormErrors] = useState<
         Record<string, Record<string, string>>
     >({});
@@ -135,7 +177,7 @@ export default function MediaUpload({
         // Automatically add files to parent component
         const autoValidatedFiles = newFiles.map((file) => ({
             ...file,
-            type: getMediaType(file.file.type),
+            type: getMediaType(file.file!.type),
             altText: '',
         }));
 
@@ -251,20 +293,30 @@ export default function MediaUpload({
                                         {file.preview && (
                                             <img
                                                 src={file.preview}
-                                                alt={file.file.name}
+                                                alt={
+                                                    file.file?.name ??
+                                                    file.altText ??
+                                                    ''
+                                                }
                                                 className="h-16 w-16 shrink-0 rounded object-cover"
                                             />
                                         )}
                                         <div className="min-w-0 flex-1 space-y-1">
                                             <p className="truncate text-sm font-medium">
-                                                {file.file.name}
+                                                {file.file?.name ??
+                                                    file.preview
+                                                        ?.split('/')
+                                                        .pop() ??
+                                                    'Remote media'}
                                             </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {Math.round(
-                                                    file.file.size / 1024,
-                                                )}{' '}
-                                                KB
-                                            </p>
+                                            {file.file && (
+                                                <p className="text-xs text-muted-foreground">
+                                                    {Math.round(
+                                                        file.file.size / 1024,
+                                                    )}{' '}
+                                                    KB
+                                                </p>
+                                            )}
                                         </div>
                                         <button
                                             type="button"

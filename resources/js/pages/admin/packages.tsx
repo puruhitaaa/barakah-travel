@@ -50,6 +50,13 @@ type PackageRow = {
     is_featured?: boolean;
     description?: string;
     created_at: string;
+    media?: {
+        id: number;
+        path: string;
+        type: 'image' | 'video';
+        alt_text?: string | null;
+        mime_type?: string | null;
+    }[];
 };
 
 type Sort = { by: string; direction: 'asc' | 'desc' };
@@ -115,7 +122,7 @@ export default function PackagesPage() {
 
     interface MediaFile {
         id: string;
-        file: File;
+        file?: File;
         type: 'image' | 'video';
         preview?: string;
         altText?: string;
@@ -125,10 +132,12 @@ export default function PackagesPage() {
         initial,
         onSubmit,
         submitting,
+        initialMedia,
     }: {
         initial?: Partial<FormValues>;
         onSubmit: (values: FormValues, media?: MediaFile[]) => void;
         submitting: boolean;
+        initialMedia?: PackageRow['media'];
     }) {
         const [values, setValues] = useState<FormValues>({
             name: initial?.name ?? '',
@@ -318,6 +327,7 @@ export default function PackagesPage() {
                 <div className="pt-2">
                     <MediaUpload
                         onFilesSelected={setSelectedMedia}
+                        initialFiles={initialMedia}
                         maxFiles={5}
                         maxFileSize={5242880}
                     />
@@ -361,6 +371,7 @@ export default function PackagesPage() {
                                         row.is_featured ?? false,
                                     ),
                                 }}
+                                initialMedia={row.media}
                                 submitting={submitting}
                                 onSubmit={(values, media) => {
                                     setSubmitting(true);
@@ -390,22 +401,28 @@ export default function PackagesPage() {
                                     );
 
                                     if (media && media.length > 0) {
-                                        media.forEach((item, index) => {
-                                            formData.append(
-                                                `media[${index}][file]`,
-                                                item.file,
-                                            );
-                                            formData.append(
-                                                `media[${index}][type]`,
-                                                item.type,
-                                            );
-                                            if (item.altText) {
+                                        // Only append newly selected files (those with a File object)
+                                        const newFiles = media.filter(
+                                            (m) => m.file,
+                                        );
+                                        if (newFiles.length > 0) {
+                                            newFiles.forEach((item, index) => {
                                                 formData.append(
-                                                    `media[${index}][alt_text]`,
-                                                    item.altText,
+                                                    `media[${index}][file]`,
+                                                    item.file as File,
                                                 );
-                                            }
-                                        });
+                                                formData.append(
+                                                    `media[${index}][type]`,
+                                                    item.type,
+                                                );
+                                                if (item.altText) {
+                                                    formData.append(
+                                                        `media[${index}][alt_text]`,
+                                                        item.altText,
+                                                    );
+                                                }
+                                            });
+                                        }
                                     }
 
                                     router.post(
@@ -447,7 +464,20 @@ export default function PackagesPage() {
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={() =>
-                                    router.delete(packages.destroy.url(row.id))
+                                    router.delete(
+                                        packages.destroy.url(row.id),
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    'Package deleted successfully!',
+                                                ),
+                                            onError: () =>
+                                                toast.error(
+                                                    'Something went wrong when deleting package!',
+                                                ),
+                                        },
+                                    )
                                 }
                             >
                                 Delete
@@ -516,10 +546,13 @@ export default function PackagesPage() {
                                         );
 
                                         if (media && media.length > 0) {
-                                            media.forEach((item, index) => {
+                                            const newFiles = media.filter(
+                                                (m) => m.file,
+                                            );
+                                            newFiles.forEach((item, index) => {
                                                 formData.append(
                                                     `media[${index}][file]`,
-                                                    item.file,
+                                                    item.file as File,
                                                 );
                                                 formData.append(
                                                     `media[${index}][type]`,

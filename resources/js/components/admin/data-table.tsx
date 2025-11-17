@@ -125,7 +125,7 @@ export default function AdminDataTable<T extends Record<string, unknown>>({
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="max-h-[60vh] overflow-x-auto overflow-y-auto">
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b">

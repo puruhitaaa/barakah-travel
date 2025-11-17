@@ -1,5 +1,5 @@
 {
-    "agents": [],
+    "agents": ["copilot", "trae", "qoder"],
     "editors": ["vscode"],
     "guidelines": ["laravel/fortify"]
 }

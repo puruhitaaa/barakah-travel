@@ -33,6 +33,7 @@ import transportations from '@/routes/admin/transportations';
 import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 type TransportationRow = {
@@ -262,7 +263,17 @@ export default function TransportationsPage() {
                                     {
                                         preserveScroll: true,
                                         onFinish: () => setSubmitting(false),
-                                        onSuccess: () => setOpen(false),
+                                        onSuccess: () => {
+                                            setOpen(false);
+                                            toast.success(
+                                                'Transportation updated successfully!',
+                                            );
+                                        },
+                                        onError: () => {
+                                            toast.error(
+                                                'Something went wrong when updating transportation!',
+                                            );
+                                        },
                                     },
                                 );
                             }}
@@ -287,6 +298,17 @@ export default function TransportationsPage() {
                                 onClick={() =>
                                     router.delete(
                                         transportations.destroy.url(row.id),
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    'Transportation deleted successfully!',
+                                                ),
+                                            onError: () =>
+                                                toast.error(
+                                                    'Something went wrong when deleting transportation!',
+                                                ),
+                                        },
                                     )
                                 }
                             >
@@ -333,9 +355,17 @@ export default function TransportationsPage() {
                                         values,
                                         {
                                             preserveScroll: true,
-                                            onSuccess: () =>
-                                                setCreateOpen(false),
-                                            onError: () => {},
+                                            onSuccess: () => {
+                                                setCreateOpen(false);
+                                                toast.success(
+                                                    'Transportation created successfully!',
+                                                );
+                                            },
+                                            onError: () => {
+                                                toast.error(
+                                                    'Something went wrong when creating transportation!',
+                                                );
+                                            },
                                         },
                                     )
                                 }

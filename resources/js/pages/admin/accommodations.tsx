@@ -1,17 +1,5 @@
 import AdminDataTable from '@/components/admin/data-table';
-import AppLayout from '@/layouts/app-layout';
-import accommodations from '@/routes/admin/accommodations';
-import { type SharedData } from '@/types';
-import { Head, router, usePage } from '@inertiajs/react';
 import InputError from '@/components/input-error';
-import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -23,9 +11,22 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import AppLayout from '@/layouts/app-layout';
+import accommodations from '@/routes/admin/accommodations';
+import { type SharedData } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 type AccommodationRow = {
@@ -65,7 +66,10 @@ export default function AccommodationsPage() {
                 name: z.string().min(1).max(255),
                 type: z.string().min(1).max(255),
                 location: z.string().max(255).optional(),
-                rating: z.preprocess((v) => Number(v), z.number().min(0).max(5)),
+                rating: z.preprocess(
+                    (v) => Number(v),
+                    z.number().min(0).max(5),
+                ),
                 description: z.string().optional(),
             }),
         [],
@@ -97,7 +101,8 @@ export default function AccommodationsPage() {
         const submit = () => {
             const parsed = schema.safeParse(values);
             if (!parsed.success) {
-                const fieldErrors: Partial<Record<keyof FormValues, string>> = {};
+                const fieldErrors: Partial<Record<keyof FormValues, string>> =
+                    {};
                 parsed.error.issues.forEach((issue) => {
                     const key = issue.path[0] as keyof FormValues;
                     fieldErrors[key] = issue.message;
@@ -228,7 +233,17 @@ export default function AccommodationsPage() {
                                     {
                                         preserveScroll: true,
                                         onFinish: () => setSubmitting(false),
-                                        onSuccess: () => setOpen(false),
+                                        onSuccess: () => {
+                                            setOpen(false);
+                                            toast.success(
+                                                'Accommodation updated successfully!',
+                                            );
+                                        },
+                                        onError: () => {
+                                            toast.error(
+                                                'Something went wrong when updating accommodation!',
+                                            );
+                                        },
                                     },
                                 );
                             }}
@@ -243,7 +258,9 @@ export default function AccommodationsPage() {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Delete accommodation?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                                Delete accommodation?
+                            </AlertDialogTitle>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -251,6 +268,17 @@ export default function AccommodationsPage() {
                                 onClick={() =>
                                     router.delete(
                                         accommodations.destroy.url(row.id),
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    'Accommodation deleted successfully!',
+                                                ),
+                                            onError: () =>
+                                                toast.error(
+                                                    'Something went wrong when deleting accommodation!',
+                                                ),
+                                        },
                                     )
                                 }
                             >
@@ -297,8 +325,17 @@ export default function AccommodationsPage() {
                                         values,
                                         {
                                             preserveScroll: true,
-                                            onSuccess: () => setCreateOpen(false),
-                                            onError: () => {},
+                                            onSuccess: () => {
+                                                setCreateOpen(false);
+                                                toast.success(
+                                                    'Accommodation created successfully!',
+                                                );
+                                            },
+                                            onError: () => {
+                                                toast.error(
+                                                    'Something went wrong when creating accommodation!',
+                                                );
+                                            },
                                         },
                                     )
                                 }

@@ -28,6 +28,7 @@ import { type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 type GatewayRow = {
@@ -291,7 +292,17 @@ export default function PaymentGatewaysPage() {
                                     {
                                         preserveScroll: true,
                                         onFinish: () => setSubmitting(false),
-                                        onSuccess: () => setOpen(false),
+                                        onSuccess: () => {
+                                            setOpen(false);
+                                            toast.success(
+                                                'Payment gateway updated successfully!',
+                                            );
+                                        },
+                                        onError: () => {
+                                            toast.error(
+                                                'Something went wrong when updating payment gateway!',
+                                            );
+                                        },
                                     },
                                 );
                             }}
@@ -316,6 +327,17 @@ export default function PaymentGatewaysPage() {
                                 onClick={() =>
                                     router.delete(
                                         paymentGateways.destroy.url(row.id),
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    'Payment gateway deleted successfully!',
+                                                ),
+                                            onError: () =>
+                                                toast.error(
+                                                    'Something went wrong when deleting payment gateway!',
+                                                ),
+                                        },
                                     )
                                 }
                             >
@@ -376,8 +398,17 @@ export default function PaymentGatewaysPage() {
                                             preserveScroll: true,
                                             onFinish: () =>
                                                 setSubmitting(false),
-                                            onSuccess: () =>
-                                                setCreateOpen(false),
+                                            onSuccess: () => {
+                                                setCreateOpen(false);
+                                                toast.success(
+                                                    'Payment gateway created successfully!',
+                                                );
+                                            },
+                                            onError: () => {
+                                                toast.error(
+                                                    'Something went wrong when creating payment gateway!',
+                                                );
+                                            },
                                         },
                                     );
                                 }}

@@ -30,6 +30,8 @@ class PackageController extends Controller implements HasMiddleware
     public function index(Request $request): Response
     {
         $query = Package::query();
+        // Eager load media so the edit dialog can display existing media
+        $query->with('media');
 
         $search = (string) $request->query('q', '');
         if ($search !== '') {
@@ -52,14 +54,14 @@ class PackageController extends Controller implements HasMiddleware
             $query->whereDate('departure_date', '<=', $request->date('departure_to'));
         }
 
-        $allowedSorts = ['name', 'price', 'departure_date', 'available_slots', 'created_at'];
+        $allowedSorts = ['name', 'price', 'departure_date', 'available_slots', 'type', 'created_at'];
         $sort = $request->string('sort');
         $direction = $request->string('direction', 'desc');
         $sort = in_array($sort, $allowedSorts, true) ? $sort : 'created_at';
         $direction = $direction === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sort, $direction);
 
-        $perPage = max(1, min((int) $request->query('per_page', 15), 100));
+        $perPage = max(1, min((int) $request->query('per_page', 10), 100));
         $items = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('admin/packages', [
