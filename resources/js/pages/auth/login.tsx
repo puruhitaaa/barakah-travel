@@ -15,12 +15,14 @@ interface LoginProps {
     status?: string;
     canResetPassword: boolean;
     canRegister: boolean;
+    callbackUrl?: string;
 }
 
 export default function Login({
     status,
     canResetPassword,
     canRegister,
+    callbackUrl,
 }: LoginProps) {
     return (
         <AuthLayout
@@ -36,6 +38,13 @@ export default function Login({
             >
                 {({ processing, errors }) => (
                     <>
+                        {callbackUrl && (
+                            <input
+                                type="hidden"
+                                name="callbackUrl"
+                                value={callbackUrl}
+                            />
+                        )}
                         <div className="grid gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>
@@ -101,7 +110,14 @@ export default function Login({
                         {canRegister && (
                             <div className="text-center text-sm text-muted-foreground">
                                 Don't have an account?{' '}
-                                <TextLink href={register()} tabIndex={5}>
+                                <TextLink
+                                    href={
+                                        callbackUrl
+                                            ? `${register()}?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                                            : register()
+                                    }
+                                    tabIndex={5}
+                                >
                                     Sign up
                                 </TextLink>
                             </div>

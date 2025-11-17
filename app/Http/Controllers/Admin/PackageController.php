@@ -5,13 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Packages\StorePackageRequest;
 use App\Http\Requests\Packages\UpdatePackageRequest;
+use App\Jobs\StorePackageMedia;
 use App\Models\Package;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class PackageController extends Controller implements HasMiddleware
 {
@@ -77,43 +81,115 @@ class PackageController extends Controller implements HasMiddleware
     public function store(StorePackageRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $package = Package::create($data);
 
-        // Handle media uploads
-        if ($request->has('media')) {
-            $mediaItems = $request->input('media', []);
-            foreach ($mediaItems as $mediaItem) {
-                if (isset($mediaItem['file'])) {
-                    $file = $mediaItem['file'];
-                    $path = $file->store('media/packages', 'public');
+        $tmpPaths = [];
 
-                    $package->media()->create([
-                        'type' => $mediaItem['type'] ?? 'image',
-                        'disk' => 'public',
-                        'path' => $path,
-                        'mime_type' => $file->getMimeType(),
-                        'size' => $file->getSize(),
-                        'alt_text' => $mediaItem['alt_text'] ?? null,
-                        'ordering' => 0,
-                    ]);
+        try {
+            DB::beginTransaction();
+
+            $package = Package::create($data);
+
+            if ($request->has('media')) {
+                $mediaItems = $request->input('media', []);
+                $mediaFiles = $request->file('media', []);
+
+                foreach ($mediaItems as $index => $mediaItem) {
+                    if (isset($mediaFiles[$index]['file'])) {
+                        $file = $mediaFiles[$index]['file'];
+                        $tmpPath = $file->store('tmp/packages', 'public');
+                        $tmpPaths[] = $tmpPath;
+
+                        StorePackageMedia::dispatch(
+                            packageId: $package->id,
+                            tmpPath: $tmpPath,
+                            type: $mediaItem['type'] ?? 'image',
+                            altText: $mediaItem['alt_text'] ?? null,
+                            disk: 'public',
+                        );
+                    }
                 }
             }
-        }
 
-        return redirect()->route('admin.packages.index')->with('success', 'Package created');
+            DB::commit();
+
+            return redirect()->route('admin.packages.index')->with('success', 'Package created');
+        } catch (Throwable $e) {
+            DB::rollBack();
+            foreach ($tmpPaths as $path) {
+                Storage::disk('public')->delete($path);
+            }
+            throw $e;
+        }
     }
 
     public function update(UpdatePackageRequest $request, Package $package): RedirectResponse
     {
         $data = $request->validated();
-        $package->update($data);
 
-        return redirect()->route('admin.packages.index')->with('success', 'Package updated');
+        $tmpPaths = [];
+
+        try {
+            DB::beginTransaction();
+
+            $package->update($data);
+
+            if ($request->has('media')) {
+                $mediaItems = $request->input('media', []);
+                $mediaFiles = $request->file('media', []);
+
+                foreach ($mediaItems as $index => $mediaItem) {
+                    if (isset($mediaFiles[$index]['file'])) {
+                        $file = $mediaFiles[$index]['file'];
+                        $tmpPath = $file->store('tmp/packages', 'public');
+                        $tmpPaths[] = $tmpPath;
+
+                        StorePackageMedia::dispatch(
+                            packageId: $package->id,
+                            tmpPath: $tmpPath,
+                            type: $mediaItem['type'] ?? 'image',
+                            altText: $mediaItem['alt_text'] ?? null,
+                            disk: 'public',
+                        );
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.packages.index')->with('success', 'Package updated');
+        } catch (Throwable $e) {
+            DB::rollBack();
+            foreach ($tmpPaths as $path) {
+                Storage::disk('public')->delete($path);
+            }
+            throw $e;
+        }
     }
 
     public function destroy(Package $package): RedirectResponse
     {
-        $package->delete();
+        try {
+            DB::beginTransaction();
+
+            $mediaItems = $package->media()->get();
+            foreach ($mediaItems as $media) {
+                $disk = $media->disk ?? 'public';
+                $path = $media->path;
+
+                if ($path) {
+                    Storage::disk($disk)->delete($path);
+                }
+
+                $media->delete();
+            }
+
+            $package->delete();
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
 
         return redirect()->route('admin.packages.index')->with('success', 'Package deleted');
     }

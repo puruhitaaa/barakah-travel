@@ -13,7 +13,7 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->enum('status', ['pending', 'success', 'failed'])->index();
             $table->string('payment_method', 64)->nullable();
-            $table->string('reference_number')->unique();
+            $table->string('reference_number')->unique()->nullable();
             $table->foreignId('booking_id')->constrained()->cascadeOnUpdate()->restrictOnDelete();
             $table->string('gateway_type')->nullable();
             $table->unsignedBigInteger('gateway_id')->nullable();

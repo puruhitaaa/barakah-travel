@@ -1,20 +1,35 @@
 'use client';
 
+import BookingPaymentModal from '@/components/booking-payment-modal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { router, usePage } from '@inertiajs/react';
 import { CheckCircle2, Mail, Phone } from 'lucide-react';
 import { useState } from 'react';
 
 type BookingCardProps = {
     pkg: {
+        id: number;
+        name: string;
         price: number;
     };
 };
 
 export function BookingCard({ pkg }: BookingCardProps) {
-    const [quantity, setQuantity] = useState(1);
+    const { auth } = usePage<{ auth: { user: unknown } }>().props;
+    const [paymentOpen, setPaymentOpen] = useState(false);
 
-    const totalPrice = pkg.price * quantity;
+    const handleReserveClick = () => {
+        if (!auth.user) {
+            // Redirect to login with callback URL
+            const callbackUrl = window.location.pathname;
+            router.visit(
+                `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+            );
+            return;
+        }
+        setPaymentOpen(true);
+    };
 
     return (
         <Card className="sticky top-8 overflow-hidden">
@@ -31,9 +46,6 @@ export function BookingCard({ pkg }: BookingCardProps) {
             <CardContent className="space-y-6 pt-6">
                 {/* Price Section */}
                 <div className="space-y-2">
-                    <p className="text-sm tracking-wide text-foreground/60 uppercase">
-                        Price Per Person
-                    </p>
                     <p className="text-4xl font-bold text-primary">
                         {pkg.price.toLocaleString('id-ID', {
                             currency: 'IDR',
@@ -43,51 +55,13 @@ export function BookingCard({ pkg }: BookingCardProps) {
                     </p>
                 </div>
 
-                {/* Quantity Selector */}
-                <div className="flex flex-col gap-y-3">
-                    <label className="text-sm font-medium text-foreground">
-                        Number of Pilgrims
-                    </label>
-                    <div className="flex items-center gap-3 rounded-lg border border-border p-2">
-                        <button
-                            onClick={() =>
-                                setQuantity(Math.max(1, quantity - 1))
-                            }
-                            className="cursor-pointer rounded px-3 py-1 transition hover:bg-primary/10"
-                        >
-                            −
-                        </button>
-                        <span className="flex-1 text-center font-semibold">
-                            {quantity}
-                        </span>
-                        <button
-                            onClick={() => setQuantity(quantity + 1)}
-                            className="cursor-pointer rounded px-3 py-1 transition hover:bg-primary/10"
-                        >
-                            +
-                        </button>
-                    </div>
-                </div>
-
-                {/* Total Price */}
-                <div className="space-y-1 rounded-lg bg-primary/10 p-4">
-                    <p className="text-sm text-foreground/70">Total Price</p>
-                    <p className="text-3xl font-bold text-primary">
-                        {totalPrice.toLocaleString('id-ID', {
-                            currency: 'IDR',
-                            style: 'currency',
-                            currencyDisplay: 'code',
-                        })}
-                    </p>
-                </div>
-
                 {/* Booking Buttons */}
                 <div className="space-y-3">
-                    <Button className="w-full bg-primary py-5 text-base font-semibold text-primary-foreground hover:bg-primary/90">
+                    <Button
+                        onClick={handleReserveClick}
+                        className="w-full bg-primary py-5 text-base font-semibold text-primary-foreground hover:bg-primary/90"
+                    >
                         Reserve Now
-                    </Button>
-                    <Button variant="outline" className="w-full py-5">
-                        Request Quote
                     </Button>
                 </div>
 
@@ -98,8 +72,8 @@ export function BookingCard({ pkg }: BookingCardProps) {
                     </p>
                     {[
                         'Free cancellation up to 30 days',
-                        'Flexible payment plans',
-                        'Group discounts available',
+                        // 'Flexible payment plans',
+                        // 'Group discounts available',
                     ].map((benefit, i) => (
                         <div
                             key={i}
@@ -139,6 +113,14 @@ export function BookingCard({ pkg }: BookingCardProps) {
                     </div>
                 </div>
             </CardContent>
+
+            <BookingPaymentModal
+                open={paymentOpen}
+                onOpenChange={setPaymentOpen}
+                packageId={pkg.id}
+                packageName={pkg.name}
+                packagePrice={pkg.price}
+            />
         </Card>
     );
 }

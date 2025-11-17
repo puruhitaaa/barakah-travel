@@ -1,6 +1,7 @@
 import { login } from '@/routes';
 import { store } from '@/routes/register';
-import { Form, Head } from '@inertiajs/react';
+import { type SharedData } from '@/types';
+import { Form, Head, usePage } from '@inertiajs/react';
 
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
@@ -11,6 +12,8 @@ import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
 
 export default function Register() {
+    const { callbackUrl } = usePage<SharedData & { callbackUrl?: string }>()
+        .props;
     return (
         <AuthLayout
             title="Create an account"
@@ -25,6 +28,13 @@ export default function Register() {
             >
                 {({ processing, errors }) => (
                     <>
+                        {callbackUrl && (
+                            <input
+                                type="hidden"
+                                name="callbackUrl"
+                                value={callbackUrl}
+                            />
+                        )}
                         <div className="grid gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="name">Name</Label>
@@ -103,7 +113,14 @@ export default function Register() {
 
                         <div className="text-center text-sm text-muted-foreground">
                             Already have an account?{' '}
-                            <TextLink href={login()} tabIndex={6}>
+                            <TextLink
+                                href={
+                                    callbackUrl
+                                        ? `${login()}?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                                        : login()
+                                }
+                                tabIndex={6}
+                            >
                                 Log in
                             </TextLink>
                         </div>

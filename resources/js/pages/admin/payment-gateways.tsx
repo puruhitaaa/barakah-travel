@@ -34,6 +34,13 @@ type GatewayRow = {
     id: number;
     name: string;
     is_active: boolean;
+    config?: {
+        server_key?: string;
+        client_key?: string;
+        is_production?: boolean;
+        is_sanitized?: boolean;
+        is_3ds?: boolean;
+    };
     created_at: string;
 };
 
@@ -45,6 +52,15 @@ const schema = z.object({
         .min(1, 'Name is required')
         .max(255, 'Name must not exceed 255 characters'),
     is_active: z.boolean().default(false),
+    config: z
+        .object({
+            server_key: z.string().optional(),
+            client_key: z.string().optional(),
+            is_production: z.boolean().optional(),
+            is_sanitized: z.boolean().optional(),
+            is_3ds: z.boolean().optional(),
+        })
+        .optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -78,6 +94,13 @@ export default function PaymentGatewaysPage() {
         const [values, setValues] = useState<FormValues>({
             name: initial?.name ?? '',
             is_active: initial?.is_active ?? false,
+            config: {
+                server_key: initial?.config?.server_key ?? '',
+                client_key: initial?.config?.client_key ?? '',
+                is_production: initial?.config?.is_production ?? false,
+                is_sanitized: initial?.config?.is_sanitized ?? false,
+                is_3ds: initial?.config?.is_3ds ?? false,
+            },
         });
 
         const [errors, setErrors] = useState<
@@ -132,6 +155,103 @@ export default function PaymentGatewaysPage() {
                     />
                     <Label htmlFor="is_active">Active</Label>
                 </div>
+                <div className="space-y-4 border-t pt-4">
+                    <h3 className="font-semibold">Configuration</h3>
+                    <div>
+                        <Label htmlFor="server_key">Server Key</Label>
+                        <Input
+                            id="server_key"
+                            type="password"
+                            value={values.config?.server_key ?? ''}
+                            onChange={(e) =>
+                                setValues({
+                                    ...values,
+                                    config: {
+                                        ...values.config,
+                                        server_key: e.target.value,
+                                    },
+                                })
+                            }
+                            placeholder="Enter server key"
+                        />
+                        <InputError
+                            message={
+                                errors['config.server_key' as keyof FormValues]
+                            }
+                        />
+                    </div>
+                    <div>
+                        <Label htmlFor="client_key">Client Key</Label>
+                        <Input
+                            id="client_key"
+                            type="password"
+                            value={values.config?.client_key ?? ''}
+                            onChange={(e) =>
+                                setValues({
+                                    ...values,
+                                    config: {
+                                        ...values.config,
+                                        client_key: e.target.value,
+                                    },
+                                })
+                            }
+                            placeholder="Enter client key"
+                        />
+                        <InputError
+                            message={
+                                errors['config.client_key' as keyof FormValues]
+                            }
+                        />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Checkbox
+                            id="is_production"
+                            checked={values.config?.is_production ?? false}
+                            onCheckedChange={(checked) =>
+                                setValues({
+                                    ...values,
+                                    config: {
+                                        ...values.config,
+                                        is_production: Boolean(checked),
+                                    },
+                                })
+                            }
+                        />
+                        <Label htmlFor="is_production">Production Mode</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Checkbox
+                            id="is_sanitized"
+                            checked={values.config?.is_sanitized ?? false}
+                            onCheckedChange={(checked) =>
+                                setValues({
+                                    ...values,
+                                    config: {
+                                        ...values.config,
+                                        is_sanitized: Boolean(checked),
+                                    },
+                                })
+                            }
+                        />
+                        <Label htmlFor="is_sanitized">Sanitized</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Checkbox
+                            id="is_3ds"
+                            checked={values.config?.is_3ds ?? false}
+                            onCheckedChange={(checked) =>
+                                setValues({
+                                    ...values,
+                                    config: {
+                                        ...values.config,
+                                        is_3ds: Boolean(checked),
+                                    },
+                                })
+                            }
+                        />
+                        <Label htmlFor="is_3ds">3DS Enabled</Label>
+                    </div>
+                </div>
                 <DialogFooter>
                     <Button type="submit" disabled={submitting}>
                         Save
@@ -160,6 +280,7 @@ export default function PaymentGatewaysPage() {
                             initial={{
                                 name: row.name,
                                 is_active: row.is_active,
+                                config: row.config,
                             }}
                             submitting={submitting}
                             onSubmit={(values) => {

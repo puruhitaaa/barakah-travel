@@ -49,10 +49,17 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureLoginResponse(): void
     {
         $this->app->singleton(LoginResponse::class, function () {
-            return new class implements LoginResponse {
+            return new class implements LoginResponse
+            {
                 public function toResponse($request)
                 {
                     $user = $request->user();
+
+                    // Check for callback URL from query parameters
+                    $callbackUrl = $request->query('callbackUrl');
+                    if ($callbackUrl) {
+                        return redirect($callbackUrl);
+                    }
 
                     if ($user->hasRole('admin')) {
                         return redirect()->intended('/admin/dashboard');
@@ -69,10 +76,17 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureRegisterResponse(): void
     {
         $this->app->singleton(RegisterResponse::class, function () {
-            return new class implements RegisterResponse {
+            return new class implements RegisterResponse
+            {
                 public function toResponse($request)
                 {
                     $user = $request->user();
+
+                    // Check for callback URL from query parameters
+                    $callbackUrl = $request->query('callbackUrl');
+                    if ($callbackUrl) {
+                        return redirect($callbackUrl);
+                    }
 
                     if ($user->hasRole('admin')) {
                         return redirect()->intended('/admin/dashboard');
@@ -95,6 +109,7 @@ class FortifyServiceProvider extends ServiceProvider
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
             'canRegister' => Features::enabled(Features::registration()),
             'status' => $request->session()->get('status'),
+            'callbackUrl' => $request->query('callbackUrl'),
         ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/reset-password', [
@@ -110,7 +125,9 @@ class FortifyServiceProvider extends ServiceProvider
             'status' => $request->session()->get('status'),
         ]));
 
-        Fortify::registerView(fn () => Inertia::render('auth/register'));
+        Fortify::registerView(fn (Request $request) => Inertia::render('auth/register', [
+            'callbackUrl' => $request->query('callbackUrl'),
+        ]));
 
         Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/two-factor-challenge'));
 

@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -104,6 +105,13 @@ class MediaController extends Controller implements HasMiddleware
 
     public function destroy(Media $media): RedirectResponse
     {
+        $disk = $media->disk ?? 'public';
+        $path = $media->path;
+
+        if ($path) {
+            Storage::disk($disk)->delete($path);
+        }
+
         $media->delete();
 
         return redirect()->route('admin.media.index')->with('success', 'Media deleted');

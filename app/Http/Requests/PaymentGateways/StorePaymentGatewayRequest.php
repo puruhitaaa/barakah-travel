@@ -20,8 +20,13 @@ class StorePaymentGatewayRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('payment_gateways', 'name')],
-            'config' => ['nullable', 'array'],
             'is_active' => ['sometimes', 'boolean'],
+            'config' => ['nullable', 'array'],
+            'config.server_key' => ['nullable', 'string'],
+            'config.client_key' => ['nullable', 'string'],
+            'config.is_production' => ['nullable', 'boolean'],
+            'config.is_sanitized' => ['nullable', 'boolean'],
+            'config.is_3ds' => ['nullable', 'boolean'],
         ];
     }
 }

@@ -361,11 +361,53 @@ export default function PackagesPage() {
                                     ),
                                 }}
                                 submitting={submitting}
-                                onSubmit={(values) => {
+                                onSubmit={(values, media) => {
                                     setSubmitting(true);
-                                    router.put(
+                                    const formData = new FormData();
+                                    formData.append('_method', 'put');
+                                    Object.entries(values).forEach(
+                                        ([key, value]) => {
+                                            if (
+                                                value !== null &&
+                                                value !== undefined
+                                            ) {
+                                                if (typeof value === 'boolean') {
+                                                    formData.append(
+                                                        key,
+                                                        value ? '1' : '0',
+                                                    );
+                                                } else {
+                                                    formData.append(
+                                                        key,
+                                                        String(value),
+                                                    );
+                                                }
+                                            }
+                                        },
+                                    );
+
+                                    if (media && media.length > 0) {
+                                        media.forEach((item, index) => {
+                                            formData.append(
+                                                `media[${index}][file]`,
+                                                item.file,
+                                            );
+                                            formData.append(
+                                                `media[${index}][type]`,
+                                                item.type,
+                                            );
+                                            if (item.altText) {
+                                                formData.append(
+                                                    `media[${index}][alt_text]`,
+                                                    item.altText,
+                                                );
+                                            }
+                                        });
+                                    }
+
+                                    router.post(
                                         packages.update.url(row.id),
-                                        values,
+                                        formData,
                                         {
                                             preserveScroll: true,
                                             onFinish: () =>

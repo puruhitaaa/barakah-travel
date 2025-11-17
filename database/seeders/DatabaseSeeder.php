@@ -47,8 +47,18 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $customerUser = User::firstOrCreate(
+            ['email' => 'customer@example.com'],
+            [
+                'name' => 'Customer User',
+                'password' => 'password',
+                'email_verified_at' => now(),
+            ]
+        );
+
         $user->assignRole('admin');
         $staffUser->assignRole('staff');
+        $customerUser->assignRole('customer');
 
         // Call all seeders in proper dependency order
         $this->call([
