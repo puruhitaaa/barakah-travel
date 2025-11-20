@@ -7,6 +7,7 @@ use App\Http\Requests\Packages\StorePackageRequest;
 use App\Http\Requests\Packages\UpdatePackageRequest;
 use App\Jobs\StorePackageMedia;
 use App\Models\Package;
+use App\Models\Media;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -156,6 +157,34 @@ class PackageController extends Controller implements HasMiddleware
                 }
             }
 
+            // Delete any remote media flagged by the client
+            $deleted = $request->input('deleted_media', []);
+            if (!empty($deleted) && is_array($deleted)) {
+                foreach ($deleted as $mediaId) {
+                    $media = Media::find($mediaId);
+                    if ($media) {
+                        if ($media->disk === 'cloudinary' && class_exists(\Cloudinary\Cloudinary::class) && $media->external_id) {
+                            try {
+                                $cloudinary = new \Cloudinary\Cloudinary([
+                                    'cloud' => [
+                                        'cloud_name' => config('services.cloudinary.cloud_name'),
+                                        'api_key' => config('services.cloudinary.api_key'),
+                                        'api_secret' => config('services.cloudinary.api_secret'),
+                                    ],
+                                ]);
+                                $resourceType = $media->type === 'video' ? 'video' : 'image';
+                                $cloudinary->uploadApi()->destroy($media->external_id, ['resource_type' => $resourceType]);
+                            } catch (\Throwable $e) {
+                                // Log and continue
+                            }
+                        } else {
+                            Storage::disk($media->disk ?? 'public')->delete($media->path);
+                        }
+                        $media->delete();
+                    }
+                }
+            }
+
             DB::commit();
 
             return redirect()->route('admin.packages.index')->with('success', 'Package updated');
@@ -175,11 +204,26 @@ class PackageController extends Controller implements HasMiddleware
 
             $mediaItems = $package->media()->get();
             foreach ($mediaItems as $media) {
-                $disk = $media->disk ?? 'public';
-                $path = $media->path;
-
-                if ($path) {
-                    Storage::disk($disk)->delete($path);
+                if ($media->disk === 'cloudinary' && class_exists(\Cloudinary\Cloudinary::class) && $media->external_id) {
+                    try {
+                        $cloudinary = new \Cloudinary\Cloudinary([
+                            'cloud' => [
+                                'cloud_name' => config('services.cloudinary.cloud_name'),
+                                'api_key' => config('services.cloudinary.api_key'),
+                                'api_secret' => config('services.cloudinary.api_secret'),
+                            ],
+                        ]);
+                        $resourceType = $media->type === 'video' ? 'video' : 'image';
+                        $cloudinary->uploadApi()->destroy($media->external_id, ['resource_type' => $resourceType]);
+                    } catch (\Throwable $e) {
+                        // Don't let Cloudinary errors prevent package deletion - keep trying
+                    }
+                } else {
+                    $disk = $media->disk ?? 'public';
+                    $path = $media->path;
+                    if ($path) {
+                        Storage::disk($disk)->delete($path);
+                    }
                 }
 
                 $media->delete();

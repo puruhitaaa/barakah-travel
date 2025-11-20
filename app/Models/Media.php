@@ -19,6 +19,7 @@ class Media extends Model
         'mime_type',
         'size',
         'alt_text',
+        'external_id',
         'ordering',
     ];
 

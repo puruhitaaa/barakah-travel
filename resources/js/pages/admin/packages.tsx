@@ -400,6 +400,45 @@ export default function PackagesPage() {
                                         },
                                     );
 
+                                    // When updating a package, detect which remote media
+                                    // items were removed by the user (those initially
+                                    // present, but missing from the current `media` list)
+                                    // and append them as `deleted_media[]` entries.
+                                    if (row.media && row.media.length > 0) {
+                                        const initialRemoteIds = row.media.map(
+                                            (m) => m.id,
+                                        );
+                                        const currentRemoteIds = (media ?? [])
+                                            .filter((m) =>
+                                                String(m.id).startsWith(
+                                                    'remote-',
+                                                ),
+                                            )
+                                            .map((m) =>
+                                                Number(
+                                                    String(m.id).replace(
+                                                        'remote-',
+                                                        '',
+                                                    ),
+                                                ),
+                                            );
+
+                                        const deletedRemoteIds =
+                                            initialRemoteIds.filter(
+                                                (id) =>
+                                                    !currentRemoteIds.includes(
+                                                        id,
+                                                    ),
+                                            );
+
+                                        deletedRemoteIds.forEach((id) => {
+                                            formData.append(
+                                                'deleted_media[]',
+                                                String(id),
+                                            );
+                                        });
+                                    }
+
                                     if (media && media.length > 0) {
                                         // Only append newly selected files (those with a File object)
                                         const newFiles = media.filter(
